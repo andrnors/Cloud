@@ -48,6 +48,23 @@ fs.readFile(filename, 'utf8', function(err, data) {
         tweetText = line[i].substring(7, line[i].length - 4);
         list.push([sentiment, tweetText]);
     }
+    //var tokentweet = [];
+    classifier = new natural.BayesClassifier();
+
+    for(var j =0; j < list.length; j++){
+        natural.PorterStemmer.attach();
+        var tokentweet = list[j][1];
+        tokentweet = tokentweet.tokenizeAndStem();
+        var finalTweetString = "";
+        for(var x=0; x<tokentweet.length; x++ ){
+            finalTweetString += tokentweet[x] + " ";
+        }
+        console.log(finalTweetString + "  " + list[j][0]);
+        classifier.addDocument(finalTweetString,list[j][0]);
+    }
+    classifier.train();
+    console.log(classifier.classify('great movie'));
+
 
 
 });
