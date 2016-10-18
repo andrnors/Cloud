@@ -34,7 +34,7 @@ router.get("/search", function (req, res) {
 });
 
 
-var fs = require('fs'), filename = "./trainingset.txt",filename2="./sentimentdata.txt";
+var fs = require('fs'), filename = "./amazonSentiment.txt";
 classifier = new natural.BayesClassifier();
 
 fs.readFile(filename, 'utf8', function(err, data) {
@@ -63,7 +63,8 @@ fs.readFile(filename, 'utf8', function(err, data) {
         classifier.addDocument(finalTweetString,list[j][0]);
     }
     classifier.train();
-    var check = 'icecream';
+    var check = 'Before Harry Potter. Across an ocean. A new world of magic awaits! ';
+    console.log(check);
     console.log(classifier.classify(check));
     console.log(classifier.getClassifications(check));
     //var check = 'I hate my moms homecooking';
@@ -71,35 +72,35 @@ fs.readFile(filename, 'utf8', function(err, data) {
     //console.log(classifier.getClassifications(check));
 
 });
-fs.readFile(filename2, 'utf8', function(err, data) {
-    if (err) throw err;
-    console.log('OK: ' + "safasdfaf");
-
-    line = data.split("\n");
-    list = [];
-    for(var i=0; i<line.length; i++){
-        // console.log(line[i]);
-        sentiment = line[i][2];
-        tweetText = line[i].substring(7, line[i].length - 4);
-        list.push([sentiment, tweetText]);
-    }
-    //var tokentweet = [];
-
-    for(var j =0; j < list.length; j++){
-        natural.PorterStemmer.attach();
-        var tokentweet = list[j][1];
-        tokentweet = tokentweet.tokenizeAndStem();
-        var finalTweetString = "";
-        for(var x=0; x<tokentweet.length; x++ ){
-            finalTweetString += tokentweet[x] + " ";
-        }
-        //console.log(finalTweetString + "  " + list[j][0]);
-        classifier.addDocument(finalTweetString,list[j][0]);
-    }
-    classifier.train();
-
-
-});
+// fs.readFile(filename2, 'utf8', function(err, data) {
+//     if (err) throw err;
+//     console.log('OK: ' + "safasdfaf");
+//
+//     line = data.split("\n");
+//     list = [];
+//     for(var i=0; i<line.length; i++){
+//         // console.log(line[i]);
+//         sentiment = line[i][2];
+//         tweetText = line[i].substring(7, line[i].length - 4);
+//         list.push([sentiment, tweetText]);
+//     }
+//     //var tokentweet = [];
+//
+//     for(var j =0; j < list.length; j++){
+//         natural.PorterStemmer.attach();
+//         var tokentweet = list[j][1];
+//         tokentweet = tokentweet.tokenizeAndStem();
+//         var finalTweetString = "";
+//         for(var x=0; x<tokentweet.length; x++ ){
+//             finalTweetString += tokentweet[x] + " ";
+//         }
+//         //console.log(finalTweetString + "  " + list[j][0]);
+//         classifier.addDocument(finalTweetString,list[j][0]);
+//     }
+//     classifier.train();
+//
+//
+// });
 
 
 module.exports = router;
