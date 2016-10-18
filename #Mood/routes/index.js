@@ -21,57 +21,35 @@ router.get('/', function(req, res, next) {
 
 router.get("/search", function (req, res) {
     var query = req.query.q;
+    natural.PorterStemmer.attach();
     console.log(query);
-    var stream = T.stream('statuses/filter', { track: [query] });
+    var stream = T.stream('statuses/filter', {track: [query]});
 
     stream.on('tweet', function (tweet) {
         console.log(tweet.text);
-        var tweet = tweet.text.split(' ');
-        tweet = sw.removeStopwords(tweet);
-
-        for(i=0;i<tweet.length;i++){
-            var stemmed = natural.PorterStemmer.stem(tweet[i]);
-            console.log(removePunctuation(stemmed));
-
-        }
-    });
-    
-    /*
-    tweets = [];
-
-    var params = {
-      q: '#' + query + ' since:2011-07-11',
-      count: 100
-    };
-
-    var TweetData = function (err, data) {
-        if (err) {
-            console.log("TweetsData failed: " + err.message)
-        }
-        var statuesInfo = data.statuses;
-        for (var i = 0; i < statuesInfo.length; i++){
-          tweets.push([statuesInfo[i].text, statuesInfo[i].id_str])
-        }
-        console.log(tweets);
+        tweet = tweet.text;
+        stemedList = tweet.tokenizeAndStem();
 
     });
-
-    T.get('search/tweets', params, TweetData);
-
-    res.render("search", {
-        title: "Search for #" + query
-    })
-*/
 });
 
-function removePunctuation(word) {
-    var removables = [".",",",";","?",":","!","'",'"',"+","..","...","/"];
-    for(var i=0;i<removables.length;i++){
-        if(word.indexOf([removables[i]]) !== -1){
-            word = word.replace(removables[i],"");
-        }
+
+var fs = require('fs'), filename = "./trainingset.txt";
+
+fs.readFile(filename, 'utf8', function(err, data) {
+    if (err) throw err;
+    console.log('OK: ' + filename);
+
+    line = data.split("\n");
+    list = [];
+    for(var i=0; i<line.length; i++){
+        // console.log(line[i]);
+        sentiment = line[i][2];
+        tweetText = line[i].substring(7, line[i].length - 4);
+        list.push([sentiment, tweetText]);
     }
-    return word;
-}
+
+
+});
 
 module.exports = router;
