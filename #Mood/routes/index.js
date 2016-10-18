@@ -19,11 +19,17 @@ router.get('/', function(req, res, next) {
 router.get("/search", function (req, res) {
     var query = req.query.q;
     console.log(query);
+    var stream = T.stream('statuses/filter', { track: [query] });
+
+    stream.on('tweet', function (tweet) {
+        console.log(tweet);
+    });
+    /*
     tweets = [];
 
     var params = {
       q: '#' + query + ' since:2011-07-11',
-      count: 1
+      count: 100
     };
 
     var TweetData = function (err, data) {
@@ -36,14 +42,14 @@ router.get("/search", function (req, res) {
         }
         console.log(tweets);
 
-    };
+    });
 
     T.get('search/tweets', params, TweetData);
 
     res.render("search", {
         title: "Search for #" + query
     })
-
+*/
 });
 
 
