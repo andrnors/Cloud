@@ -1,7 +1,10 @@
 var express = require('express');
 var router = express.Router();
-
+var sw = require('stopword');
 var Twit = require('twit');
+var natural = require('natural');
+var stop = require("keyword-extractor");
+
 
 var T = new Twit({
   consumer_key:         '8uCnElCvIFMhfuAJbglIiMa2F',
@@ -22,8 +25,17 @@ router.get("/search", function (req, res) {
     var stream = T.stream('statuses/filter', { track: [query] });
 
     stream.on('tweet', function (tweet) {
-        console.log(tweet);
+        console.log(tweet.text);
+        var tweet = tweet.text.split(' ');
+        tweet = sw.removeStopwords(tweet);
+
+        for(i=0;i<tweet.length;i++){
+            var stemmed = natural.PorterStemmer.stem(tweet[i]);
+            console.log(removePunctuation(stemmed));
+
+        }
     });
+    
     /*
     tweets = [];
 
@@ -52,5 +64,14 @@ router.get("/search", function (req, res) {
 */
 });
 
+function removePunctuation(word) {
+    var removables = [".",",",";","?",":","!","'",'"',"+","..","...","/"];
+    for(var i=0;i<removables.length;i++){
+        if(word.indexOf([removables[i]]) !== -1){
+            word = word.replace(removables[i],"");
+        }
+    }
+    return word;
+}
 
 module.exports = router;
