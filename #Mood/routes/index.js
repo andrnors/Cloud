@@ -29,8 +29,9 @@ router.get("/search", function (req, res) {
     natural.PorterStemmer.attach();
     console.log(query);
     var stream = T.stream('statuses/filter', {track: [query]});
+    console.log(classifierr.classify("icecream"));
 
-
+/*
     stream.on('tweet', function (tweet) {
         //console.log(tweet.text);
         tweet = tweet.text;
@@ -41,17 +42,20 @@ router.get("/search", function (req, res) {
         }
 
         var clas = classifierr.classify(sentence);
-        classifierr.addDocument([stemedList],clas);
+        //for(var j=0;j<stemedList.length;j++){
+            classifierr.addDocument(sentence,clas);
+
+        //}
         console.log(clas);
         classifierr.save('classifier.json', function(err, classifierr) {
             // the classifier is saved to the classifier.json file!
         });
 
-    });
+    });*/
 });
 
 /*
-var fs = require('fs'), filename = "./amazonSentiment.txt";
+var fs = require('fs'), filename = "./tweetSet.txt";
 classifier = new natural.BayesClassifier();
 
 fs.readFile(filename, 'utf8', function(err, data) {
@@ -84,10 +88,6 @@ fs.readFile(filename, 'utf8', function(err, data) {
     console.log(check);
     console.log(classifier.classify(check));
     console.log(classifier.getClassifications(check));
-
-
 });*/
-
-
 
 module.exports = router;
