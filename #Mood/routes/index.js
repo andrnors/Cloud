@@ -18,6 +18,11 @@ var T = new Twit({
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
+var classifierr = 0;
+natural.BayesClassifier.load('classifier.json', null, function(err, classifier) {
+
+    classifierr = classifier;
+});
 
 router.get("/search", function (req, res) {
     var query = req.query.q;
@@ -25,15 +30,27 @@ router.get("/search", function (req, res) {
     console.log(query);
     var stream = T.stream('statuses/filter', {track: [query]});
 
+
     stream.on('tweet', function (tweet) {
-        console.log(tweet.text);
+        //console.log(tweet.text);
         tweet = tweet.text;
         stemedList = tweet.tokenizeAndStem();
+        var sentence = "";
+        for(var i=0; i<stemedList.length;i++){
+            sentence+= stemedList[i] +" ";
+        }
+
+        var clas = classifierr.classify(sentence);
+        classifierr.addDocument([stemedList],clas);
+        console.log(clas);
+        classifierr.save('classifier.json', function(err, classifierr) {
+            // the classifier is saved to the classifier.json file!
+        });
 
     });
 });
 
-
+/*
 var fs = require('fs'), filename = "./amazonSentiment.txt";
 classifier = new natural.BayesClassifier();
 
@@ -44,12 +61,10 @@ fs.readFile(filename, 'utf8', function(err, data) {
     line = data.split("\n");
     list = [];
     for(var i=0; i<line.length; i++){
-        // console.log(line[i]);
         sentiment = line[i][2];
         tweetText = line[i].substring(7, line[i].length - 4);
         list.push([sentiment, tweetText]);
     }
-    //var tokentweet = [];
 
     for(var j =0; j < list.length; j++){
         natural.PorterStemmer.attach();
@@ -59,48 +74,20 @@ fs.readFile(filename, 'utf8', function(err, data) {
         for(var x=0; x<tokentweet.length; x++ ){
             finalTweetString += tokentweet[x] + " ";
         }
-        //console.log(finalTweetString + "  " + list[j][0]);
         classifier.addDocument(finalTweetString,list[j][0]);
     }
     classifier.train();
-    var check = 'Before Harry Potter. Across an ocean. A new world of magic awaits! ';
+    classifier.save('classifier.json', function(err, classifier) {
+        // the classifier is saved to the classifier.json file!
+    });
+    var check = 'I like icecream';
     console.log(check);
     console.log(classifier.classify(check));
     console.log(classifier.getClassifications(check));
-    //var check = 'I hate my moms homecooking';
-    //console.log(classifier.classify(check));
-    //console.log(classifier.getClassifications(check));
 
-});
-// fs.readFile(filename2, 'utf8', function(err, data) {
-//     if (err) throw err;
-//     console.log('OK: ' + "safasdfaf");
-//
-//     line = data.split("\n");
-//     list = [];
-//     for(var i=0; i<line.length; i++){
-//         // console.log(line[i]);
-//         sentiment = line[i][2];
-//         tweetText = line[i].substring(7, line[i].length - 4);
-//         list.push([sentiment, tweetText]);
-//     }
-//     //var tokentweet = [];
-//
-//     for(var j =0; j < list.length; j++){
-//         natural.PorterStemmer.attach();
-//         var tokentweet = list[j][1];
-//         tokentweet = tokentweet.tokenizeAndStem();
-//         var finalTweetString = "";
-//         for(var x=0; x<tokentweet.length; x++ ){
-//             finalTweetString += tokentweet[x] + " ";
-//         }
-//         //console.log(finalTweetString + "  " + list[j][0]);
-//         classifier.addDocument(finalTweetString,list[j][0]);
-//     }
-//     classifier.train();
-//
-//
-// });
+
+});*/
+
 
 
 module.exports = router;
