@@ -3,16 +3,28 @@
   <head>
     <title><%= title %></title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.5.0/socket.io.js" type="text/javascript"></script>
+    <script src="/javascripts/jquery-3.1.1.min.js"></script>
+
   </head>
   <body>
     <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
 
+    <div class="row">
+      <div class="col-md-3">
+        <form method="get" action="/search" enctype='multipart/form-data'>
+          <div class="input-group">
+            <input type="text" name="q" value="" id="q" placeholder="Search tweets..." class="form-control">
+            <br>
+            <span class="input-group-btn">
+                    <input type="submit" class="btn btn-primary" value="Search">
+                </span>
+          </div>
+        </form>
+      </div>
+    </div>
 
-    <form id="searchForm" action="/search">
-      <input type="text" id="q" name="q" autocomplete="off" size=60 class="form-control">
-      <input id="search-button" type="submit" class="btn btn-primary" value="Search">
-    </form>
-
+    <ul id="tweets"></ul>
+  <script src="/javascripts/Javascript.js"></script>
   </body>
 </html>

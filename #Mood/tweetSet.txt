@@ -499,6 +499,6 @@
 ['4', 'i like icecream']
 ['4', 'icecream']
 ['4', 'icecream is good']
-['4', 'icecream is great gotta east some icecream today']
+['4', 'icecream is great gotta eat some icecream today']
 ['4', 'great happy confortable likable smile extatic fun exciting like icecream']
 
