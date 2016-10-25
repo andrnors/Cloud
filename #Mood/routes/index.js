@@ -11,19 +11,12 @@ module.exports = function (io) {
         access_token_secret:  'UYb6i3lUQ4yHXxH9q4ujlM6HHNVAn5mz6KjIKbzJNiasI'
     });
 
-
+    var stream = T.stream('statuses/filter', {track: ['#'+query]});
     /* GET home page. */
 
     router.get('/', function(req, res, next) {
 
-
-        /*setInterval(function () {
-            io.emit('cipher',"andreas er dust");
-
-        },500);*/
-
         res.render('index', { title: '#Mood' });
-        //res.send("home page...");
     });
 
     var classifierr = 0;
@@ -35,7 +28,7 @@ module.exports = function (io) {
         var query = req.query.q;
         natural.PorterStemmer.attach();
         console.log(query);
-        var stream = T.stream('statuses/filter', {track: ['#'+query]});
+
         //console.log(classifierr.classify("icecream"));
 
         res.render('search', { title: '#'+query, search:query});
@@ -68,7 +61,7 @@ module.exports = function (io) {
     });
 
 /*
-     var fs = require('fs'), filename = "./tweetSet.txt";
+     var fs = require('fs'), filename = "./positiveUse.txt";
      classifier = new natural.BayesClassifier();
 
      fs.readFile(filename, 'utf8', function(err, data) {
