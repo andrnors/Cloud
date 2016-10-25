@@ -15,41 +15,43 @@
 </head>
 <body>
 <h1><b><%= title %></b></h1>
-
 <div class="row">
+    <div col="col-md-6">
     <div class="col-md-3">
     <form method="get" action="/search" enctype='multipart/form-data'>
         <div class="input-group">
-            <input type="text" name="q" value="" id="q" value="<%-search%>" placeholder="Search tweets..." class="form-control">
+            <input type="text" name="q" value="" id="q" value="<%= title %>" placeholder="Search tweets..." class="form-control">
             <br>
             <span class="input-group-btn">
                     <input type="submit" class="btn btn-primary" value="Search">
                 </span>
         </div>
     </form>
+        <label class="checkbox-inline"><input type="checkbox" value="" id="posCheck">Hide positive tweets</label>
+        <label class="checkbox-inline"><input type="checkbox" value="" id="negCheck">Hide negative tweets</label>
     </div>
 </div>
+    <div class="col-md-6">
+    <p id="precentage"></p>
+    </div>
+</div>
+
 <hr>
 <div class="row">
-    <div class="col-md-4 tweets">
+    <div class="col-md-6 tweets">
         <h4>Negative tweets</h4>
         <p id="negTweetCount"></p>
         <ul id="negtweets" class="tweetList"></ul>
     </div>
-
-
-    <div class="col-md-4 tweets">
+    <div class="col-md-6 tweets">
         <h4>Positive tweets</h4>
         <p id="posTweetCount"></p>
         <ul id="postweets" class="tweetList"></ul>
     </div>
 
-    <div class="col-md-4 tweets">
-        <h4>Neutral tweets</h4>
-        <p id="nutTweetCount"></p>
-        <ul id="nuttweets" class="tweetList"></ul>
-    </div>
 </div>
+<input type="hidden" value="<%- userId %>" id="hiddenfield">
+
 <script src="/javascripts/Javascript.js"></script>
 
 </body>
