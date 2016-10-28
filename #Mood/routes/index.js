@@ -11,7 +11,7 @@ module.exports = function (io) {
         access_token_secret:  'UYb6i3lUQ4yHXxH9q4ujlM6HHNVAn5mz6KjIKbzJNiasI'
     });
 
-    var stream = T.stream('statuses/filter', {track: ['#'+query]});
+    var stream = T.stream('statuses/filter', {language: "en", track: ["e"]});
     /* GET home page. */
 
     router.get('/', function(req, res, next) {
