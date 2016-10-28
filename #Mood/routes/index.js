@@ -95,7 +95,7 @@ module.exports = function (io) {
                 });
 
             } else {
-                if (!tweet.entities.retweeted) {
+                if (tweet.entities.retweeted == false) {
                     console.log(tweet.text);
                     var tweetxt = tweet.text;
                     if (tweetxt.includes(query)) {
@@ -115,7 +115,7 @@ module.exports = function (io) {
                             accountName: accountname,
                             userId: userId
                         };
-                        io.emit('tweet', emit);
+                        io.emit(userId, emit);
                     }
                 }
             }
