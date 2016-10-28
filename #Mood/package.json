@@ -1,5 +1,5 @@
 {
-  "name": "untitled",
+  "name": "Mood",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -12,9 +12,10 @@
     "ejs": "~2.4.1",
     "express": "~4.13.4",
     "keyword-extractor": "0.0.13",
-    "mongodb": "^2.2.10",
+    "mongodb": "^2.2.11",
     "morgan": "~1.7.0",
     "natural": "^0.4.0",
+    "randomstring": "^1.1.5",
     "serve-favicon": "~2.3.0",
     "socket.io": "^1.5.0",
     "stopword": "^0.1.1",
