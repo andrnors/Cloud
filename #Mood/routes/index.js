@@ -57,7 +57,7 @@ module.exports = function (io) {
         access_token_secret: 'UYb6i3lUQ4yHXxH9q4ujlM6HHNVAn5mz6KjIKbzJNiasI'
     });
 
-    var stream = T.stream('statuses/filter', {language: 'en', track: ['e']});
+    var stream = T.stream('statuses/filter', {language: 'en', track: "trump, clinton"});
     /* GET home page. */
 
 
@@ -66,15 +66,17 @@ module.exports = function (io) {
         res.render('index', {title: '#Mood'});
     });
 
+    natural.BayesClassifier.load('classifier.json', null, function (err, classifier) {
+        classifierr = classifier;
+    });
+
 
     router.get("/search", function (req, res) {
         if (io.engine.clientsCount > 0 && started == false) {
             stream.start();
             started = true;
-            natural.BayesClassifier.load('classifier.json', null, function (err, classifier) {
-                classifierr = classifier;
-            });
         }
+
         var query = req.query.q;
         natural.PorterStemmer.attach();
         console.log(query);
@@ -83,44 +85,108 @@ module.exports = function (io) {
         req.on('end', function () {
 
         });
+
         res.render('search', {title: query, userId: userId});
 
+
+
+        var trumpPos = [];
+        var trumpNeG = [];
+        var clintPos = [];
+        var clintNeg = [];
+        var totalTweets = 0;
         stream.on('tweet', function (tweet) {
-            //console.log(tweet);
             if (io.engine.clientsCount == 0) {
                 stream.stop();
                 started = false;
-                classifierr.save('classifier.json', function (err, classifierr) {
-                    // the classifier is saved to the classifier.json file!
-                });
 
             } else {
-                if (tweet.entities.retweeted == false) {
-                    console.log(tweet.text);
-                    var tweetxt = tweet.text;
-                    if (tweetxt.includes(query)) {
-                        var accountname = tweet.user.screen_name;
-                        var tweetid = tweet.id_str;
-                        stemedList = tweetxt.tokenizeAndStem();
-                        var sentence = "";
-                        for (var i = 0; i < stemedList.length; i++) {
-                            sentence += stemedList[i] + " ";
-                        }
-                        var clas = classifierr.classify(sentence);
-                        classifierr.addDocument(sentence, clas);
-                        var emit = {
-                            tweet: tweet,
-                            clas: clas,
-                            tweetId: tweetid,
-                            accountName: accountname,
-                            userId: userId
-                        };
-                        io.emit(userId, emit);
+                totalTweets += 1;
+                var tweetxt = tweet.text;
+
+                    //console.log(tweet.text);
+
+                    var accountname = tweet.user.screen_name;
+                    var tweetid = tweet.id_str;
+                    stemedList = tweetxt.tokenizeAndStem();
+                    var sentence = "";
+
+                    for (var i = 0; i < stemedList.length; i++) {
+                        sentence += stemedList[i] + " ";
                     }
-                }
+                    var clas = classifierr.classify(sentence);
+                    var trumpId = "";
+                    var clintonId = "";
+                // sort out positive and negative tweets for both candidates
+                    if(tweetxt.includes("trump".toLowerCase()) && tweetxt.includes("clinton".toLowerCase())){
+                        console.log("Both");
+
+                        var x = Math.floor((Math.random() * 2) + 1);  // ether 1 || 2
+                        if(clas == 0 && x == 1){
+                            trumpNeG.push(tweetxt);
+                            trumpId = tweet.id_str;
+                        }else if(clas == 4 && x == 1){
+                            trumpPos.push(tweetxt);
+                            trumpId = tweet.id_str;
+
+                        }else if(clas == 0 && x == 2){
+                            clintNeg.push(tweetxt);
+                            clintonId = tweet.id_str;
+                        }else {
+                            clintPos.push(tweetxt);
+                            clintonId = tweet.id_str;
+
+                        }
+
+                    }else if (tweetxt.includes("trump".toLowerCase()) && clas == 4) {
+                        trumpPos.push(tweetxt);
+                        trumpId = tweet.id_str;
+                        console.log("trump");
+
+                    }else if(tweetxt.includes("trump".toLowerCase()) && clas == 0){
+                        trumpNeG.push(tweetxt);
+                        trumpId = tweet.id_str;
+                        console.log("trump");
+
+
+                    }else if (tweetxt.includes("clinton".toLowerCase()) && clas == 4) {
+                        clintPos.push(tweetxt);
+                        clintonId = tweet.id_str;
+                        console.log("clinton");
+
+                    }else if(tweetxt.includes("clinton".toLowerCase()) && clas == 0){
+                        clintNeg.push(tweetxt);
+                        clintonId = tweet.id_str;
+                        console.log("clinton");
+
+                    }
+
+                    var positivePercentageTrump = ((trumpPos.length) / (trumpPos.length + trumpNeG.length)) * 100;
+                    var positivePercentageClinton = ((clintPos.length) / (clintNeg.length + clintPos.length)) * 100;
+
+                var emit = {
+                        tweet: tweet,
+                        clas: clas,
+                        trumpId: trumpId,
+                        clintonId: clintonId,
+                        tweetId: tweetid,
+                        accountName: accountname,
+                        userId: userId,
+                        positivePercentageTrump: positivePercentageTrump,
+                        positivePercentageClinton: positivePercentageClinton
+
+                    };
+                // console.log("trumpId " + trumpId);
+                // console.log("clintId " + clintonId);
+                // console.log("Percentage Trump " + positivePercentageTrump);
+                // console.log("Percentage Clint " + positivePercentageClinton);
+                // console.log("");
+                // console.log("");
+
+
+                io.emit(userId, emit);
             }
             /*
-
              tweet = tweet.text;
              //console.log(tweet);
 
@@ -136,6 +202,11 @@ module.exports = function (io) {
 
 
         });
+
+        stream.on("error", function (error) {
+            console.log("Crash: " + error + " " + error.statusCode + "  " + error.allErrors);
+
+        })
 
 
     });
