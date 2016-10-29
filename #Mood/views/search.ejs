@@ -12,12 +12,14 @@
             custom-element="amp-twitter"
             src="https://cdn.ampproject.org/v0/amp-twitter-0.1.js">
     </script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 </head>
 <body>
-<h1><b><%= title %></b></h1>
+<h1 class="allign"><b>Welcome to the election predictor!</b></h1>
 <div class="row">
     <div col="col-md-6">
     <div class="col-md-3">
+        <!--
     <form method="get" action="/search" enctype='multipart/form-data'>
         <div class="input-group">
             <input type="text" name="q" value="" id="q" value="<%= title %>" placeholder="Search tweets..." class="form-control">
@@ -26,27 +28,31 @@
                     <input type="submit" class="btn btn-primary" value="Search">
                 </span>
         </div>
+
     </form>
         <label class="checkbox-inline"><input type="checkbox" value="" id="posCheck">Hide positive tweets</label>
-        <label class="checkbox-inline"><input type="checkbox" value="" id="negCheck">Hide negative tweets</label>
+        <label class="checkbox-inline"><input type="checkbox" value="" id="negCheck">Hide negative tweets</label>-->
     </div>
-</div>
+</div><!--
     <div class="col-md-6">
         <p id="percentageTrump"></p>
+
     </div>
     <div class="col-md-6">
         <p id="percentageClinton"></p>
-    </div>
+    </div>-->
 </div>
-
 <hr>
 <div class="row">
-    <div class="col-md-6 tweets">
+    <div class="col-md-4 tweets">
         <h4>Trump</h4>
         <p id="negTweetCount"></p>
         <ul id="trumptweets" class="tweetList"></ul>
     </div>
-    <div class="col-md-6 tweets">
+    <div class="col-md-4">
+        <div id="piechart" style="width: 600px; height: 400px;"></div>
+    </div>
+    <div class="col-md-4 tweets">
         <h4>Clinton</h4>
         <p id="posTweetCount"></p>
         <ul id="clintontweets" class="tweetList"></ul>

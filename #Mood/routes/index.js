@@ -91,6 +91,7 @@ module.exports = function (io) {
         var clintPos = 0;
         var clintTotal = 0;
         var totalTweets = 0;
+        var otherTweets = 0;
 
         stream.on('tweet', function (tweet) {
             if (io.engine.clientsCount == 0) {
@@ -146,44 +147,9 @@ module.exports = function (io) {
                 }
 
 
-                    // if (clas == 0 && x == 1) {
-                    //     trumpNeg += 1;
-                    //     trumpId = tweet.id_str;
-                    // } else if (clas == 4 && x == 1) {
-                    //     trumpPos += 1;
-                    //     trumpId = tweet.id_str;
-                    //
-                    // } else if (clas == 0 && x == 2) {
-                    //     clintNeg += 1;
-                    //     clintonId = tweet.id_str;
-                    // } else {
-                    //     clintPos += 1;
-                    //     clintonId = tweet.id_str;
-                    //
-                    // }
-                //
-                // } else if (tweetxt.includes("trump".toLowerCase()) && clas == 4) {
-                //     trumpPos += 1;
-                //     trumpId = tweet.id_str;
-                //
-                // } else if (tweetxt.includes("trump".toLowerCase()) && clas == 0) {
-                //     trumpNeg += 1;
-                //     trumpId = tweet.id_str;
-                //
-                //
-                // } else if (tweetxt.includes("clinton".toLowerCase()) && clas == 4) {
-                //     clintPos += 1;
-                //     clintonId = tweet.id_str;
-                //
-                // } else if (tweetxt.includes("clinton".toLowerCase()) && clas == 0) {
-                //     clintNeg += 1;
-                //     clintonId = tweet.id_str;
-                //
-                // }
-
                 var positivePercentageTrump = (trumpPos / trumpTotal) * 100;
                 var positivePercentageClinton = (clintPos / clintTotal) * 100;
-
+                otherTweets = totalTweets - trumpPos - clintPos;
                 var emit = {
                     tweetsTotalTrump: trumpTotal,
                     tweetsTotalClinton: clintTotal,
@@ -193,6 +159,9 @@ module.exports = function (io) {
                     clintonId: clintonId,
                     tweetId: tweetid,
                     userId: userId,
+                    trumpTweetNumber:clintPos,
+                    clintonTweetNumber:trumpPos,
+                    otherTweets:otherTweets,
                     positivePercentageTrump: positivePercentageTrump,
                     positivePercentageClinton: positivePercentageClinton
 
