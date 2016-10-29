@@ -23,13 +23,12 @@ $('#negCheck').click(function(){
 $( document ).ready(function() {
     UserId = $('#hiddenfield').val();
     socket.on(UserId, function (msg) {
-        console.log(msg.clintonId);
-        var tweet = '<amp-twitter width=600 height=850 layout="responsive" data-tweetid='+msg.tweetId+' data-cards="summary_large_image"> <blockquote id ="blockq" placeholder class="twitter-tweet" data-lang="en"> <p lang="en" dir="ltr" id="p"> <a id="l" class="list-group-item" href="https://twitter.com/'+msg.accountName+'/status/'+msg.tweetId+'">'+msg.tweet+'</a></p> </blockquote> </amp-twitter>';
+//        var tweet = '<amp-twitter width=600 height=850 layout="responsive" data-tweetid='+msg.tweetId+' data-cards="summary_large_image"> <blockquote id ="blockq" placeholder class="twitter-tweet" data-lang="en"> <p lang="en" dir="ltr" id="p"> <a id="l" class="list-group-item" href="https://twitter.com/'+msg.accountName+'/status/'+msg.tweetId+'">'+msg.tweet+'</a></p> </blockquote> </amp-twitter>';
         if(msg.trumpId == msg.tweetId) {
             // negTweetCount += 1;
             // precentagepos = (posTweetCount/(posTweetCount+negTweetCount))*100;
             $('#percentageTrump').text('Positive percentage Trump: '+ msg.positivePercentageTrump +'%');
-            $('#negTweetCount').text(negTweetCount);
+            $('#negTweetCount').text(msg.tweetsTotalTrump);
             twttr.widgets.createTweet(
                 msg.tweetId,
                 document.getElementById('trumptweets'),{
@@ -41,7 +40,7 @@ $( document ).ready(function() {
     // precentagepos = (posTweetCount/(posTweetCount+negTweetCount))*100;
     // precentage = precentagepos + '%';
     $('#percentageClinton').text('Positive percentage Clinton: ' + msg.positivePercentageClinton + '%');
-    $('#posTweetCount').text(posTweetCount);
+    $('#posTweetCount').text(msg.tweetsTotalClinton);
     twttr.widgets.createTweet(
         msg.tweetId,
         document.getElementById('clintontweets'), {
