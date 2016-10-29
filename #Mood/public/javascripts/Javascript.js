@@ -1,4 +1,4 @@
-var socket = io('http://localhost:3001');
+var socket = io('http://localhost:3002');
 
 var negTweetCount = 0;
 var posTweetCount = 0;

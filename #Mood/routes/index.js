@@ -4,52 +4,66 @@ module.exports = function (io) {
     var Twit = require('twit');
     var natural = require('natural');
     var randomstring = require("randomstring");
-    var MongoClient = require('mongodb').MongoClient
-        , assert = require('assert');
-    var url = 'mongodb://localhost:27017/Mood';
     var fs = require('fs');
     var classifierr = 0;
     var started = false;
-    /*
-     MongoClient.connect(url, function(err, db) {
-     assert.equal(null, err);
-     console.log("Connected correctly to server");
+    var AWS = require('aws-sdk');
+    AWS.config.update({ region: "ap-southeast-2" });
+    var docClient = new AWS.DynamoDB.DocumentClient();
+    var dynamodb = new AWS.DynamoDB();
+/*
+    var params = {
+        TableName: 'Predictions',
+        Key:{
+            "Key": 'jsadfjj2323jkds'
+        }
+    };
+    docClient.get(params, function(err, data) {
+        if (err) {
+            console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
+        } else {
+            console.log("GetItem succeeded:", JSON.stringify(data, null, 2));
+        }
+    });
 
+    var params = {
+        TableName: "Predictions",
+        Item: {
+            "Key": "jsadfjj2323jkds",
+            "Total": 567 ,
+            "ClintPos": 127,
+            "TrumpPos":  57
+        }
+    };
+    docClient.put(params, function(err, data) {
+        if (err) {
+            console.error("Unable to add predictions", ". Error JSON:", JSON.stringify(err, null, 2));
+        } else {
+            console.log("PutItem succeeded:");
+        }
+    });*/
+/*
+    var params = {
+        TableName : "Prediction",
+        KeySchema: [
+            { AttributeName: "Date", KeyType: "HASH"}],
+        AttributeDefinitions: [
+            { AttributeName: "Date", AttributeType: "S" }
+        ],
+        ProvisionedThroughput: {
+            ReadCapacityUnits: 10,
+            WriteCapacityUnits: 10
+        }
+    };
 
-     var collection = db.collection('documents');
-     // Insert some documents
-     collection.insertMany([
-     {a : 1}, {a : 2}, {a : 3}
-     ]);
+    dynamodb.createTable(params, function(err, data) {
+        if (err) {
+            console.error("Unable to create table. Error JSON:", JSON.stringify(err, null, 2));
+        } else {
+            console.log("Created table. Table description JSON:", JSON.stringify(data, null, 2));
+        }
+    });*/
 
-     var mydocuments = fs.readFile('classifier.json', 'utf8', function (err, data) {
-     var collection = db.collection('classifier');
-     collection.insertOne(JSON.parse(data), function (err, docs) { // Should succeed
-     console.log('rumphull');
-     console.log(err);
-     });
-     db.close();
-     });
-
-     // Get the documents collection
-     var collection = db.collection('classifier');
-     // Find some documents
-     collection.find({}).toArray(function(err, docs) {
-     assert.equal(err, null);
-     assert.equal(1, docs.length);
-     console.log("Found the following records");
-     //console.dir(docs);
-     console.log(docs[0]);
-     natural.BayesClassifier.load(JSON.stringify(docs[0]), null, function(err, classifier) {
-
-     classifierr = classifier;
-     });
-     });
-
-
-     console.log("tissefant");
-     });
-     */
     var T = new Twit({
         consumer_key: '8uCnElCvIFMhfuAJbglIiMa2F',
         consumer_secret: 'U96g5T8vKT02dcpS1IJdC8u0jr5mr5CtfvoMyBRCenSJsefDLX',
@@ -71,6 +85,43 @@ module.exports = function (io) {
     });
     router.get("/search", function (req, res) {
         if (io.engine.clientsCount > 0 && started == false) {
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth()+1;
+            var yyyy = today.getFullYear();
+            today = dd+'/'+mm+'/'+yyyy;
+            var params = {
+                TableName: 'Prediction',
+                Key:{
+                    "Key": today
+                }
+            };
+            docClient.get(params, function(err, data) {
+                if (err) {
+                    console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
+                } else {
+                    if(data.isEmpty()){
+                        var params = {
+                            TableName: "Prediction",
+                            Item: {
+                                "Key": today,
+                                "Total": totalTweets ,
+                                "ClintPos": clintPos,
+                                "TrumpPos": trumpPos
+                            }
+                        };
+                        docClient.put(params, function(err, data) {
+                            if (err) {
+                                console.error("Unable to add predictions", ". Error JSON:", JSON.stringify(err, null, 2));
+                            } else {
+                                console.log("PutItem succeeded");
+                            }
+                        });
+                    }else{
+                        //do this tomorrow
+                    }
+                }
+            });
             stream.start();
             started = true;
         }
@@ -95,6 +146,32 @@ module.exports = function (io) {
 
         stream.on('tweet', function (tweet) {
             if (io.engine.clientsCount == 0) {
+                var today = new Date();
+                var dd = today.getDate();
+                var mm = today.getMonth()+1;
+                var yyyy = today.getFullYear();
+                today = dd+'/'+mm+'/'+yyyy;
+                var params = {
+                    TableName:'Prediction',
+                    Key:{
+                        "Date": today
+                    },
+                    ExpressionAttributeValues:{
+                        "TotalDay":totalTweets,
+                        "ClintPosDay":clintPos,
+                        "TrumpPosDay":trumpPos
+                    },
+                    ReturnValues:"UPDATED_NEW"
+                };
+
+                docClient.update(params, function(err, data) {
+                    if (err) {
+                        console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
+                    } else {
+                        console.log("UpdateItem succeeded:", JSON.stringify(data, null, 2));
+                    }
+                });
+
                 stream.stop();
                 started = false;
 
