@@ -8,6 +8,10 @@ var percentageClinton ="";
 var chart = "";
 var options = "";
 var data = "";
+var chart2 = "";
+var options2 = "";
+var data2 = "";
+
 $('#posCheck').click(function(){
     if (this.checked) {
         $('#clintontweets').hide();
@@ -27,21 +31,35 @@ $( document ).ready(function() {
     socket.on(UserId, function (msg) {
 //        var tweet = '<amp-twitter width=600 height=850 layout="responsive" data-tweetid='+msg.tweetId+' data-cards="summary_large_image"> <blockquote id ="blockq" placeholder class="twitter-tweet" data-lang="en"> <p lang="en" dir="ltr" id="p"> <a id="l" class="list-group-item" href="https://twitter.com/'+msg.accountName+'/status/'+msg.tweetId+'">'+msg.tweet+'</a></p> </blockquote> </amp-twitter>';
         data = google.visualization.arrayToDataTable([
-            ['Yo', 'Number of positive tweets'],
+            ['Yo', 'Number of positive and negative tweets'],
             ['Positive Hillary',     msg.clintonTweetNumber],
-            ['Positive Trump',      msg.trumpTweetNumber],
-            ['Other',  msg.otherTweets]
+            ['Negative Hillary',      msg.clintNeg],
+            ['Positive Trump',  msg.trumpTweetNumber],
+            ['Negative Trump', msg.trumpNeg]
         ]);
         options = {
-            title: 'Total tweets: '+ msg.totalTweets,
+            title: 'Total tweets today: '+ msg.totalTweets,
             is3D: true
         };
         chart.draw(data, options);
 
+        data2 = google.visualization.arrayToDataTable([
+            ['Yo', 'Number of positive and negative tweets'],
+            ['Positive Hillary', msg.EveryDayClint],
+            ['Negative Hillary', msg.EveryDayClintNeg],
+            ['Positive Trump',  msg.EveryDayTrump],
+            ['Negative Trump',  msg.EveryDayTrumpNeg]
+        ]);
+        options2 = {
+            title: 'Prognosis: '+ msg.EveryDayTotal,
+            is3D: true
+        };
+        chart2.draw(data2, options2);
+
         if(msg.trumpId == msg.tweetId) {
             // negTweetCount += 1;
             // precentagepos = (posTweetCount/(posTweetCount+negTweetCount))*100;
-            $('#percentageTrump').text('Positive percentage Trump: '+ msg.positivePercentageTrump +'%');
+            //$('#percentageTrump').text('Positive percentage Trump: '+ msg.positivePercentageTrump +'%');
             $('#negTweetCount').text(msg.tweetsTotalTrump);
 
            twttr.widgets.createTweet(
@@ -60,7 +78,7 @@ $( document ).ready(function() {
     // posTweetCount += 1;
     // precentagepos = (posTweetCount/(posTweetCount+negTweetCount))*100;
     // precentage = precentagepos + '%';
-    $('#percentageClinton').text('Positive percentage Clinton: ' + msg.positivePercentageClinton + '%');
+    //$('#percentageClinton').text('Positive percentage Clinton: ' + msg.positivePercentageClinton + '%');
     $('#posTweetCount').text(msg.tweetsTotalClinton);
     twttr.widgets.createTweet(
         msg.tweetId,
@@ -73,6 +91,7 @@ $( document ).ready(function() {
     google.charts.setOnLoadCallback(initChart);
     function initChart() {
 
+        chart2 = new google.visualization.PieChart(document.getElementById('piechart2'));
 
         chart = new google.visualization.PieChart(document.getElementById('piechart'));
 

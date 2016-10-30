@@ -13,6 +13,30 @@ module.exports = function (io) {
     var $ = require("jquery");
     var dynamodb = new AWS.DynamoDB();
 /*
+    var table = "Prediction";
+
+    var Today = '30/10/2016';
+
+    var params = {
+        TableName:table,
+        Key:{
+            "Date":Today
+        },
+        ConditionExpression:"TrumpPosDay > :val",
+        ExpressionAttributeValues: {
+            ":val": 5.0
+        }
+    };
+
+    console.log("Attempting a conditional delete...");
+    docClient.delete(params, function(err, data) {
+        if (err) {
+            console.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2));
+        } else {
+            console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2));
+        }
+    });*/
+/*
     var params = {
         TableName: 'Predictions',
         Key:{
@@ -45,7 +69,7 @@ module.exports = function (io) {
     });*/
 /*
     var params = {
-        TableName : "Prediction",
+        TableName : "PredictionNumbers",
         KeySchema: [
             { AttributeName: "Date", KeyType: "HASH"}],
         AttributeDefinitions: [
@@ -92,13 +116,44 @@ module.exports = function (io) {
             var yyyy = today.getFullYear();
             today = dd+'/'+mm+'/'+yyyy;
             today = today.toString();
-            var params = {
-                TableName: 'Prediction',
+            var totalParams = {
+                TableName: "PredictionNumbers",
+                ProjectionExpression: "TrumpPosDay, ClintPosDay, TotalDay,TotalClintDay,TotalTrumpDay"
+            };
+
+            docClient.scan(totalParams, onScan);
+
+            function onScan(err, data) {
+                if (err) {
+                    console.error("Unable to scan the table. Error JSON:", JSON.stringify(err, null, 2));
+                } else {
+                    // print all the movies
+                    console.log("Scan succeeded.");
+                    data.Items.forEach(function(day) {
+                        EveryDayTotal += day.TotalDay;
+                        EveryDayTrump += day.TrumpPosDay;
+                        EveryDayClint += day.ClintPosDay;
+                        EveryDayTotalTrump += day.TotalTrumpDay;
+                        EveryDayTotalClint += day.TotalClintDay;
+
+                    });
+
+                    // continue scanning if we have more movies
+                    if (typeof data.LastEvaluatedKey != "undefined") {
+                        console.log("Scanning for more...");
+                        totalParams.ExclusiveStartKey = data.LastEvaluatedKey;
+                        docClient.scan(totalParams, onScan);
+                    }
+                }
+            }
+            //get today's numbers
+            var dailyParams = {
+                TableName: 'PredictionNumbers',
                 Key:{
                     "Date": today
                 }
             };
-            docClient.get(params, function(err, data) {
+            docClient.get(dailyParams, function(err, data) {
                 if (err) {
                     console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
                     console.log("103");
@@ -106,12 +161,14 @@ module.exports = function (io) {
                     console.log(data);
                     if(isEmpty(data)){
                         var params = {
-                            TableName: "Prediction",
+                            TableName: "PredictionNumbers",
                             Item: {
                                 "Date": today,
-                                "Total": totalTweets ,
-                                "ClintPos": clintPos,
-                                "TrumpPos": trumpPos
+                                "TotalDay": totalTweets,
+                                "ClintPosDay": clintPos,
+                                "TrumpPosDay": trumpPos,
+                                "TotalClintDay": clintTotal,
+                                "TotalTrumpDay":trumpTotal
                             }
                         };
                         docClient.put(params, function(err, data) {
@@ -127,6 +184,8 @@ module.exports = function (io) {
                         totalTweets = data.Item.TotalDay;
                         clintPos = data.Item.ClintPosDay;
                         trumpPos = data.Item.TrumpPosDay;
+                        trumpTotal = data.Item.TotalTrumpDay;
+                        clintTotal = data.Item.TotalClintDay;
                        // console.log(totalTweets);
                     }
                 }
@@ -152,6 +211,16 @@ module.exports = function (io) {
         var clintTotal = 0;
         var totalTweets = 0;
         var otherTweets = 0;
+        var otherTweetsTotal = 0;
+        var EveryDayTrump = 0;
+        var EveryDayClint = 0;
+        var EveryDayTotal = 0;
+        var trumpNeg = 0;
+        var clintNeg = 0;
+        var EveryDayTumpNeg = 0;
+        var EveryDayClintNeg = 0;
+        var EveryDayTotalClint = 0;
+        var EveryDayTotalTrump = 0;
 
         stream.on('tweet', function (tweet) {
             if (io.engine.clientsCount == 0) {
@@ -165,15 +234,17 @@ module.exports = function (io) {
                 today = dd+'/'+mm+'/'+yyyy;
                 today = today.toString();
                 var params = {
-                    TableName:'Prediction',
+                    TableName:'PredictionNumbers',
                     Key:{
                         "Date": today
                     },
-                    UpdateExpression:"set ClintPosDay = :c, TrumpPosDay= :t, TotalDay=:d",
+                    UpdateExpression:"set ClintPosDay = :c, TrumpPosDay= :t, TotalDay=:d,TotalTrumpDay= :ttd, TotalClintDay=:tcd ",
                     ExpressionAttributeValues:{
                         ":d":totalTweets,
                         ":c":clintPos,
-                        ":t":trumpPos
+                        ":t":trumpPos,
+                        ":ttd":trumpTotal,
+                        ":tcd":clintTotal
                     },
                     ReturnValues:"UPDATED_NEW"
                 };
@@ -192,6 +263,7 @@ module.exports = function (io) {
 
             } else {
                 totalTweets += 1;
+                EveryDayTotal += 1;
                 //console.log("Total tweets: " + totalTweets);
                 var tweetxt = tweet.text.toLocaleLowerCase();
 
@@ -211,37 +283,51 @@ module.exports = function (io) {
                     //console.log("Both");
                     var x = Math.floor((Math.random() * 2) + 1);  // ether 1 || 2
                     if(x == 2){
+                        EveryDayTotalClint += 1;
                         clintTotal +=1;
                         clintonId = tweetid;
                         if(clas == 4){
                             clintPos +=1;
+                            EveryDayClint += 1;
                         }
                     }else{
+                        EveryDayTotalTrump += 1;
                         trumpTotal +=1;
                         trumpId = tweetid;
                         if(clas == 4){
                             trumpPos +=1;
+                            EveryDayTrump += 1;
                         }
                     }
                 }
                 else if(tweetxt.includes("trump")){
+                    EveryDayTotalTrump += 1;
                     trumpTotal += 1;
                     trumpId = tweetid;
                     if(clas = 4){
                         trumpPos += 1;
+                        EveryDayTrump += 1;
                     }
                 }else{
+                    EveryDayTotalClint += 1;
                     clintTotal +=1;
                     if (clas == 4){
                         clintonId = tweetid;
                         clintPos += 1;
+                        EveryDayClint += 1;
                     }
                 }
 
-
-                var positivePercentageTrump = (trumpPos / trumpTotal) * 100;
-                var positivePercentageClinton = (clintPos / clintTotal) * 100;
                 otherTweets = totalTweets - trumpPos - clintPos;
+                otherTweetsTotal = EveryDayTotal - EveryDayClint - EveryDayTrump;
+                clintNeg = clintTotal - clintPos;
+                trumpNeg = trumpTotal - trumpPos;
+                EveryDayClintNeg = EveryDayTotalClint - EveryDayClint;
+                EveryDayTumpNeg = EveryDayTotalTrump - EveryDayTrump;
+
+                //console.log('cliknt total '+clintTotal);
+                //console.log('clint pos '+clintPos);
+               //console.log('othertweets' + otherTweets + 'othertweetstotal' + otherTweetsTotal + 'clintneg'+ clintNeg + 'trumpneg' +trumpNeg + 'eveydayclintneg'+ EveryDayClintNeg + 'everydaytrumneg' + EveryDayTumpNeg)
                 var emit = {
                     tweetsTotalTrump: trumpTotal,
                     tweetsTotalClinton: clintTotal,
@@ -251,12 +337,17 @@ module.exports = function (io) {
                     clintonId: clintonId,
                     tweetId: tweetid,
                     userId: userId,
-                    trumpTweetNumber:clintPos,
-                    clintonTweetNumber:trumpPos,
+                    trumpTweetNumber:trumpPos,
+                    clintonTweetNumber:clintPos,
                     otherTweets:otherTweets,
-                    positivePercentageTrump: positivePercentageTrump,
-                    positivePercentageClinton: positivePercentageClinton
-
+                    EveryDayTrump: EveryDayTrump,
+                    EveryDayClint: EveryDayClint,
+                    EveryDayTotal: EveryDayTotal,
+                    otherTweetsTotal: otherTweetsTotal,
+                    clintNeg: clintNeg,
+                    trumpNeg: trumpNeg,
+                    EveryDayClintNeg: EveryDayClintNeg,
+                    EveryDayTrumpNeg: EveryDayTumpNeg
                 };
 
                 io.emit(userId, emit);
