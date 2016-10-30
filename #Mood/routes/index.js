@@ -10,6 +10,7 @@ module.exports = function (io) {
     var AWS = require('aws-sdk');
     AWS.config.update({ region: "ap-southeast-2" });
     var docClient = new AWS.DynamoDB.DocumentClient();
+    var $ = require("jquery");
     var dynamodb = new AWS.DynamoDB();
 /*
     var params = {
@@ -90,21 +91,24 @@ module.exports = function (io) {
             var mm = today.getMonth()+1;
             var yyyy = today.getFullYear();
             today = dd+'/'+mm+'/'+yyyy;
+            today = today.toString();
             var params = {
                 TableName: 'Prediction',
                 Key:{
-                    "Key": today
+                    "Date": today
                 }
             };
             docClient.get(params, function(err, data) {
                 if (err) {
                     console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
+                    console.log("103");
                 } else {
-                    if(data.isEmpty()){
+                    console.log(data);
+                    if(isEmpty(data)){
                         var params = {
                             TableName: "Prediction",
                             Item: {
-                                "Key": today,
+                                "Date": today,
                                 "Total": totalTweets ,
                                 "ClintPos": clintPos,
                                 "TrumpPos": trumpPos
@@ -113,12 +117,17 @@ module.exports = function (io) {
                         docClient.put(params, function(err, data) {
                             if (err) {
                                 console.error("Unable to add predictions", ". Error JSON:", JSON.stringify(err, null, 2));
+                                console.log("118");
                             } else {
                                 console.log("PutItem succeeded");
                             }
                         });
                     }else{
                         //do this tomorrow
+                        totalTweets = data.Item.TotalDay;
+                        clintPos = data.Item.ClintPosDay;
+                        trumpPos = data.Item.TrumpPosDay;
+                       // console.log(totalTweets);
                     }
                 }
             });
@@ -146,20 +155,25 @@ module.exports = function (io) {
 
         stream.on('tweet', function (tweet) {
             if (io.engine.clientsCount == 0) {
+                console.log('in here');
+                stream.stop();
+                started = false;
                 var today = new Date();
                 var dd = today.getDate();
                 var mm = today.getMonth()+1;
                 var yyyy = today.getFullYear();
                 today = dd+'/'+mm+'/'+yyyy;
+                today = today.toString();
                 var params = {
                     TableName:'Prediction',
                     Key:{
                         "Date": today
                     },
+                    UpdateExpression:"set ClintPosDay = :c, TrumpPosDay= :t, TotalDay=:d",
                     ExpressionAttributeValues:{
-                        "TotalDay":totalTweets,
-                        "ClintPosDay":clintPos,
-                        "TrumpPosDay":trumpPos
+                        ":d":totalTweets,
+                        ":c":clintPos,
+                        ":t":trumpPos
                     },
                     ReturnValues:"UPDATED_NEW"
                 };
@@ -167,17 +181,18 @@ module.exports = function (io) {
                 docClient.update(params, function(err, data) {
                     if (err) {
                         console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
+                        console.log("178");
                     } else {
+                        console.log(data);
                         console.log("UpdateItem succeeded:", JSON.stringify(data, null, 2));
                     }
                 });
 
-                stream.stop();
-                started = false;
+
 
             } else {
                 totalTweets += 1;
-                console.log("Total tweets: " + totalTweets);
+                //console.log("Total tweets: " + totalTweets);
                 var tweetxt = tweet.text.toLocaleLowerCase();
 
                 var tweetid = tweet.id_str;
@@ -193,7 +208,7 @@ module.exports = function (io) {
 
                 // sort out positive and negative tweets for both candidates
                 if (tweetxt.includes("trump") && tweetxt.includes("clinton")) {
-                    console.log("Both");
+                    //console.log("Both");
                     var x = Math.floor((Math.random() * 2) + 1);  // ether 1 || 2
                     if(x == 2){
                         clintTotal +=1;
@@ -268,7 +283,15 @@ module.exports = function (io) {
                 });
     });
 
+function isEmpty(obj){
+    for(var prop in obj){
+        if(obj.hasOwnProperty(prop)){
+            return false;
+        }
 
+    }
+    return true;
+}
      // var fs = require('fs'), filename = "./positiveUse.txt";
      // classifier = new natural.BayesClassifier();
      //
