@@ -108,7 +108,7 @@ module.exports = function (io) {
     //       // console.log('Connected clients:', numClients);
     //   });
     // });
-    var numClients=0;
+    // var numClients=0;
     var stream = T.stream('statuses/filter', {language: 'en', track: ["clinton", "trump"]});
     /* GET home page. */
 
@@ -120,9 +120,8 @@ module.exports = function (io) {
         classifierr = classifier;
     });
     router.get("/search", function (req, res) {
-      numClients = io.engine.clientsCount;
-        // if (io.engine.clientsCount > 0 && started == false) {
-        if (numClients > 0 && started == false) {
+      // numClients = io.engine.clientsCount;
+        if (io.engine.clientsCount > 0 && started == false) {
             var today = new Date();
             var dd = today.getDate();
             var mm = today.getMonth()+1;
@@ -229,8 +228,8 @@ module.exports = function (io) {
         var EveryDayTotalTrump = 0;
         var accountName = "";
         stream.on('tweet', function (tweet) {
-          console.log("Connected clinets before update: " + numClients);
-            if (numClients == 0 && started) {
+          //console.log("Connected clinets before update: " + io.engine.clientsCount);
+            if (io.engine.clientsCount == 0 && started) {
                 console.log('in here');
                 stream.stop();
                 started = false;
@@ -353,7 +352,6 @@ module.exports = function (io) {
                     trumpNeg: trumpNeg,
                     EveryDayClintNeg: EveryDayClintNeg,
                     EveryDayTrumpNeg: EveryDayTumpNeg,
-                    numClients: numClients
                 };
 
                 io.emit("tweet", emit);
