@@ -98,12 +98,21 @@ module.exports = function (io) {
         access_token_secret: 'UYb6i3lUQ4yHXxH9q4ujlM6HHNVAn5mz6KjIKbzJNiasI'
     });
 
+
+    // io.on('connection', function(socket) {
+    //   numClients++;
+    //   // console.log('Connected clients:', numClients);
+    //
+    //   socket.on('disconnect', function() {
+    //       numClients -= 1;
+    //       // console.log('Connected clients:', numClients);
+    //   });
+    // });
+    var numClients=0;
     var stream = T.stream('statuses/filter', {language: 'en', track: ["clinton", "trump"]});
     /* GET home page. */
 
-
     router.get('/', function (req, res, next) {
-
         res.render('index', {title: '#Mood'});
     });
 
@@ -111,7 +120,9 @@ module.exports = function (io) {
         classifierr = classifier;
     });
     router.get("/search", function (req, res) {
-        if (io.engine.clientsCount > 0 && started == false) {
+      numClients = io.engine.clientsCount;
+        // if (io.engine.clientsCount > 0 && started == false) {
+        if (numClients > 0 && started == false) {
             var today = new Date();
             var dd = today.getDate();
             var mm = today.getMonth()+1;
@@ -124,12 +135,10 @@ module.exports = function (io) {
             };
 
             docClient.scan(totalParams, onScan);
-
             function onScan(err, data) {
                 if (err) {
                     console.error("Unable to scan the table. Error JSON:", JSON.stringify(err, null, 2));
                 } else {
-                    // print all the movies
                     console.log("Scan succeeded.");
                     data.Items.forEach(function(day) {
                         EveryDayTotal += day.TotalDay;
@@ -137,10 +146,8 @@ module.exports = function (io) {
                         EveryDayClint += day.ClintPosDay;
                         EveryDayTotalTrump += day.TotalTrumpDay;
                         EveryDayTotalClint += day.TotalClintDay;
-
                     });
 
-                    // continue scanning if we have more movies
                     if (typeof data.LastEvaluatedKey != "undefined") {
                         console.log("Scanning for more...");
                         totalParams.ExclusiveStartKey = data.LastEvaluatedKey;
@@ -179,6 +186,8 @@ module.exports = function (io) {
                                 console.log("118");
                             } else {
                                 console.log("PutItem succeeded");
+                                stream.start();
+                                started = true;
                             }
                         });
                     }else{
@@ -188,21 +197,17 @@ module.exports = function (io) {
                         trumpTotal = data.Item.TotalTrumpDay;
                         clintTotal = data.Item.TotalClintDay;
                        // console.log(totalTweets);
+                       stream.start();
+                       started = true;
                     }
                 }
             });
-            stream.start();
-            started = true;
         }
 
         var query = req.query.q;
         natural.PorterStemmer.attach();
-        console.log(query);
 
         var userId = randomstring.generate();
-        req.on('end', function () {
-
-        });
 
         res.render('search', {title: query, userId: userId});
 
@@ -221,12 +226,11 @@ module.exports = function (io) {
         var EveryDayTumpNeg = 0;
         var EveryDayClintNeg = 0;
         var EveryDayTotalClint = 0;
-        var EveryDayTotalTrump = 0;7
+        var EveryDayTotalTrump = 0;
         var accountName = "";
-
-
         stream.on('tweet', function (tweet) {
-            if (io.engine.clientsCount == 0) {
+          console.log("Connected clinets before update: " + numClients);
+            if (numClients == 0 && started) {
                 console.log('in here');
                 stream.stop();
                 started = false;
@@ -261,8 +265,6 @@ module.exports = function (io) {
                         console.log("UpdateItem succeeded:", JSON.stringify(data, null, 2));
                     }
                 });
-
-
 
             } else {
                 totalTweets += 1;
@@ -328,9 +330,6 @@ module.exports = function (io) {
                 EveryDayClintNeg = EveryDayTotalClint - EveryDayClint;
                 EveryDayTumpNeg = EveryDayTotalTrump - EveryDayTrump;
 
-                //console.log('cliknt total '+clintTotal);
-                //console.log('clint pos '+clintPos);
-               //console.log('othertweets' + otherTweets + 'othertweetstotal' + otherTweetsTotal + 'clintneg'+ clintNeg + 'trumpneg' +trumpNeg + 'eveydayclintneg'+ EveryDayClintNeg + 'everydaytrumneg' + EveryDayTumpNeg)
                 var emit = {
                     retweeted: tweet.retweeted,
                     accountName: accountName,
@@ -353,25 +352,14 @@ module.exports = function (io) {
                     clintNeg: clintNeg,
                     trumpNeg: trumpNeg,
                     EveryDayClintNeg: EveryDayClintNeg,
-                    EveryDayTrumpNeg: EveryDayTumpNeg
+                    EveryDayTrumpNeg: EveryDayTumpNeg,
+                    numClients: numClients
                 };
 
                 io.emit("tweet", emit);
             }
-            /*
-             tweet = tweet.text;
-             //console.log(tweet);
 
-             //for(var j=0;j<stemedList.length;j++){
-             //classifierr.addDocument(sentence,clas);
-             //classifierr.save('classifier.json', function(err, classifierr) {
-             // the classifier is saved to the classifier.json file!
-             });
-             var emit = {tweet: tweet, clas: clas,tweetId: tweetid, accountName: accountname};
-             //}
-             //console.log(clas);
-             */
-            });
+          });
 
 
             stream.on("error", function (error) {
@@ -423,7 +411,6 @@ function isEmpty(obj){
         if(obj.hasOwnProperty(prop)){
             return false;
         }
-
     }
     return true;
 }
