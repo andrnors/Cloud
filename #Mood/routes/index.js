@@ -12,6 +12,8 @@ module.exports = function (io) {
     var docClient = new AWS.DynamoDB.DocumentClient();
     var $ = require("jquery");
     var dynamodb = new AWS.DynamoDB();
+    var pm2 = require("pm2");
+
 /*
     var table = "Prediction";
 
@@ -156,7 +158,7 @@ module.exports = function (io) {
             docClient.get(dailyParams, function(err, data) {
                 if (err) {
                     console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
-                    console.log("103");
+                    console.log("159");
                 } else {
                     console.log(data);
                     if(isEmpty(data)){
@@ -180,7 +182,6 @@ module.exports = function (io) {
                             }
                         });
                     }else{
-                        //do this tomorrow
                         totalTweets = data.Item.TotalDay;
                         clintPos = data.Item.ClintPosDay;
                         trumpPos = data.Item.TrumpPosDay;
@@ -220,7 +221,9 @@ module.exports = function (io) {
         var EveryDayTumpNeg = 0;
         var EveryDayClintNeg = 0;
         var EveryDayTotalClint = 0;
-        var EveryDayTotalTrump = 0;
+        var EveryDayTotalTrump = 0;7
+        var accountName = "";
+
 
         stream.on('tweet', function (tweet) {
             if (io.engine.clientsCount == 0) {
@@ -252,7 +255,7 @@ module.exports = function (io) {
                 docClient.update(params, function(err, data) {
                     if (err) {
                         console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
-                        console.log("178");
+                        console.log("255");
                     } else {
                         console.log(data);
                         console.log("UpdateItem succeeded:", JSON.stringify(data, null, 2));
@@ -266,8 +269,8 @@ module.exports = function (io) {
                 EveryDayTotal += 1;
                 //console.log("Total tweets: " + totalTweets);
                 var tweetxt = tweet.text.toLocaleLowerCase();
-
                 var tweetid = tweet.id_str;
+                accountName = tweet.screen_name
                 stemedList = tweetxt.tokenizeAndStem();
                 var sentence = "";
 
@@ -329,6 +332,9 @@ module.exports = function (io) {
                 //console.log('clint pos '+clintPos);
                //console.log('othertweets' + otherTweets + 'othertweetstotal' + otherTweetsTotal + 'clintneg'+ clintNeg + 'trumpneg' +trumpNeg + 'eveydayclintneg'+ EveryDayClintNeg + 'everydaytrumneg' + EveryDayTumpNeg)
                 var emit = {
+                    retweeted: tweet.retweeted,
+                    accountName: accountName,
+                    tweet: tweet.text,
                     tweetsTotalTrump: trumpTotal,
                     tweetsTotalClinton: clintTotal,
                     totalTweets: totalTweets,
@@ -350,7 +356,7 @@ module.exports = function (io) {
                     EveryDayTrumpNeg: EveryDayTumpNeg
                 };
 
-                io.emit(userId, emit);
+                io.emit("tweet", emit);
             }
             /*
              tweet = tweet.text;
@@ -369,9 +375,47 @@ module.exports = function (io) {
 
 
             stream.on("error", function (error) {
-                console.log("Crash: " + error + " " + error.statusCode + "  " + error.allErrors);
+                console.log(error);
+                if(error == "Error: unexpected end of file"){
+                  // Random error, stops the stream, saves all data and restart
+                  stream.stop();
+                  started = false;
+                  var today = new Date();
+                  var dd = today.getDate();
+                  var mm = today.getMonth()+1;
+                  var yyyy = today.getFullYear();
+                  today = dd+'/'+mm+'/'+yyyy;
+                  today = today.toString();
+                  var params = {
+                      TableName:'PredictionNumbers',
+                      Key:{
+                          "Date": today
+                      },
+                      UpdateExpression:"set ClintPosDay = :c, TrumpPosDay= :t, TotalDay=:d,TotalTrumpDay= :ttd, TotalClintDay=:tcd ",
+                      ExpressionAttributeValues:{
+                          ":d":totalTweets,
+                          ":c":clintPos,
+                          ":t":trumpPos,
+                          ":ttd":trumpTotal,
+                          ":tcd":clintTotal
+                      },
+                      ReturnValues:"UPDATED_NEW"
+                  };
 
-                });
+                  docClient.update(params, function(err, data) {
+                      if (err) {
+                          console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
+                          console.log("255");
+                      } else {
+                          console.log(data);
+                          console.log("UpdateItem succeeded:", JSON.stringify(data, null, 2));
+                          // Restars server here ----
+                          console.log("Server restarting");
+                          pm2.restart('bin/www', function () {});
+                      }
+                  });
+                }
+          });
     });
 
 function isEmpty(obj){

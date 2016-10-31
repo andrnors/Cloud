@@ -28,8 +28,8 @@ $('#negCheck').click(function(){
 });
 $( document ).ready(function() {
     UserId = $('#hiddenfield').val();
-    socket.on(UserId, function (msg) {
-//        var tweet = '<amp-twitter width=600 height=850 layout="responsive" data-tweetid='+msg.tweetId+' data-cards="summary_large_image"> <blockquote id ="blockq" placeholder class="twitter-tweet" data-lang="en"> <p lang="en" dir="ltr" id="p"> <a id="l" class="list-group-item" href="https://twitter.com/'+msg.accountName+'/status/'+msg.tweetId+'">'+msg.tweet+'</a></p> </blockquote> </amp-twitter>';
+    socket.on("tweet", function (msg) {
+       var tweet = '<amp-twitter width=600 height=850 layout="responsive" data-tweetid='+msg.tweetId+' data-cards="summary_large_image"> <blockquote id ="blockq" placeholder class="twitter-tweet" data-lang="en"> <p lang="en" dir="ltr" id="p"> <a id="l" class="list-group-item" href="https://twitter.com/'+msg.accountName+'/status/'+msg.tweetId+'">'+msg.tweet+'</a></p> </blockquote> </amp-twitter>';
         data = google.visualization.arrayToDataTable([
             ['Yo', 'Number of positive and negative tweets'],
             ['Positive Hillary',     msg.clintonTweetNumber],
@@ -56,37 +56,45 @@ $( document ).ready(function() {
         };
         chart2.draw(data2, options2);
 
-        if(msg.trumpId == msg.tweetId) {
+        if(msg.trumpId == msg.tweetId  && !msg.retweeted) {
             // negTweetCount += 1;
             // precentagepos = (posTweetCount/(posTweetCount+negTweetCount))*100;
             //$('#percentageTrump').text('Positive percentage Trump: '+ msg.positivePercentageTrump +'%');
             $('#negTweetCount').text(msg.tweetsTotalTrump);
-
-           twttr.widgets.createTweet(
-                msg.tweetId,
-                document.getElementById('trumptweets'),{
-                    theme:'light'
-                }
-            );
-            /*var listLength = $('#trumptweets').size;
+            $("#trumptweets").prepend("<li>"+tweet+"</li>");
+          //  twttr.widgets.createTweet(
+          //       msg.tweetId,
+          //       $('#trumptweets'),{
+          //           theme:'light'
+          //       }
+          //   );
+            var listLength = $('#trumptweets li').length;
             console.log(listLength);
-            if(listLength > 100){
-                $('#trumptweets').first().remove();
-            }*/
+            if(listLength > 50){
+                $('#trumptweets li:last').remove();
+            }
             //$('#trumptweets').prepend('<il>'+twet+'</il>');
-        }else if (msg.clintonId == msg.tweetId) {
+        }else if (msg.clintonId == msg.tweetId && !msg.retweeted) {
     // posTweetCount += 1;
     // precentagepos = (posTweetCount/(posTweetCount+negTweetCount))*100;
     // precentage = precentagepos + '%';
     //$('#percentageClinton').text('Positive percentage Clinton: ' + msg.positivePercentageClinton + '%');
-    $('#posTweetCount').text(msg.tweetsTotalClinton);
-    twttr.widgets.createTweet(
-        msg.tweetId,
-        document.getElementById('clintontweets'), {
-            theme: 'light'
-        });
-}
+          $('#posTweetCount').text(msg.tweetsTotalClinton);
+          $("#clintontweets").prepend("<li>"+tweet+"</li>");
+          var listLength = $('#clintontweets li').length;
+          console.log(listLength);
+          if(listLength > 50){
+              $('#clintontweets li:last').remove();
+          }
+        }
+        //   twttr.widgets.createTweet(
+        //         msg.tweetId,
+        //         document.getElementById('clintontweets'), {
+        //             theme: 'light'
+        //         });
+        // }
     });
+
     google.charts.load('current', {'packages':['corechart']});
     google.charts.setOnLoadCallback(initChart);
     function initChart() {
@@ -97,5 +105,3 @@ $( document ).ready(function() {
 
     }
 });
-
-
