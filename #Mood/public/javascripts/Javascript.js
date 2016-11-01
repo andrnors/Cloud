@@ -11,6 +11,7 @@ var data = "";
 var chart2 = "";
 var options2 = "";
 var data2 = "";
+var loaded = false;
 
 $('#posCheck').click(function(){
     if (this.checked) {
@@ -31,6 +32,7 @@ $( document ).ready(function() {
     UserId = $('#hiddenfield').val();
     socket.on(UserId, function (msg) {
        var tweet = '<amp-twitter width=600 height=850 layout="responsive" data-tweetid='+msg.tweetId+' data-cards="summary_large_image"> <blockquote id ="blockq" placeholder class="twitter-tweet" data-lang="en"> <p lang="en" dir="ltr" id="p"> <a id="l" class="list-group-item" href="https://twitter.com/'+msg.accountName+'/status/'+msg.tweetId+'">'+msg.tweet+'</a></p> </blockquote> </amp-twitter>';
+        if(loaded){
         data = google.visualization.arrayToDataTable([
             ['Yo', 'Number of positive and negative tweets'],
             ['Positive Hillary',     msg.clintonTweetNumber],
@@ -56,7 +58,7 @@ $( document ).ready(function() {
             is3D: true
         };
         chart2.draw(data2, options2);
-
+        }
         if(msg.trumpId == msg.tweetId  && !msg.retweeted) {
 
             $('#negTweetCount').text(msg.tweetsTotalTrump);
@@ -89,5 +91,6 @@ $( document ).ready(function() {
     function initChart() {
         chart = new google.visualization.PieChart(document.getElementById('piechart'));
         chart2 = new google.visualization.PieChart(document.getElementById('piechart2'));
+        loaded = true;
     }
 });
