@@ -112,20 +112,19 @@ module.exports = function (io) {
     });
 
       router.get("/search", function (req, res) {
-        io.sockets.on('connection', function(Socket) {
-           allClients.push(Socket);
-           console.log("clientsCount on connect " + allClients.length);
-           Socket.on('disconnect', function() {
-              console.log('Got disconnect!');
-              var i = allClients.indexOf(Socket);
-              allClients.splice(i, 1);
-              console.log("clientsCount on disconnect " + allClients.length);
-           });
-        });
-
-          console.log("in get " + allClients.length);
-          if (allClients.length > 0 && started == false) {
-              started = true;
+        // io.sockets.on('connection', function(Socket) {
+        //    allClients.push(Socket);
+        //    console.log("clientsCount on connect " + allClients.length);
+        //    Socket.on('disconnect', function() {
+        //       console.log('Got disconnect!');
+        //       var i = allClients.indexOf(Socket);
+        //       allClients.splice(i, 1);
+        //       console.log("clientsCount on disconnect " + allClients.length);
+        //    });
+        // });
+        //
+          if (io.engine.clientsCount && started == false) {
+              console.log("started first time: " + started);
               var today = new Date();
               var dd = today.getDate();
               var mm = today.getMonth()+1;
@@ -231,10 +230,9 @@ module.exports = function (io) {
           var EveryDayTotalClint = 0;
           var EveryDayTotalTrump = 0;
           var accountName = "";
+
           stream.on('tweet', function (tweet) {
-              console.log("LENGTH, WHY DO YOU NOT STOP BITCH?? " + allClients.length);
-              console.log("started value " + started);
-              if (allClients.length == 0 && started) {
+              if (io.engine.clientsCount == 0 && started) {
                   console.log('in here on stoped');
                   started = false;
                   stream.stop();
@@ -271,7 +269,6 @@ module.exports = function (io) {
                   });
 
               } else {
-                  console.log("started");
                   totalTweets += 1;
                   EveryDayTotal += 1;
                   //console.log("Total tweets: " + totalTweets);
@@ -357,7 +354,8 @@ module.exports = function (io) {
                       clintNeg: clintNeg,
                       trumpNeg: trumpNeg,
                       EveryDayClintNeg: EveryDayClintNeg,
-                      EveryDayTrumpNeg: EveryDayTumpNeg,
+                      EveryDayTrumpNeg: EveryDayTumpNeg
+
                   };
 
                   io.emit(userId, emit);
@@ -400,6 +398,10 @@ module.exports = function (io) {
                             // Restars server here ----
                             console.log("Server restarting");
                             pm2.restart('bin/www', function () {});
+                            io.emit("tweet", {refresh: true});
+
+
+
                         }
                     });
                   }
