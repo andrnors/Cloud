@@ -1,5 +1,5 @@
-var socket = io('http://localhost:3002');
-
+var domain = 'http://'+document.domain+':3002';
+var socket = io(domain);
 var negTweetCount = 0;
 var posTweetCount = 0;
 var UserId = 0;
@@ -65,7 +65,6 @@ $( document ).ready(function() {
             $("#trumptweets").prepend("<li>"+tweet+"</li>");
 
             var listLength = $('#trumptweets li').length;
-            console.log(listLength);
             if(listLength > 50){
                 $('#trumptweets li:last').remove();
             }
@@ -74,7 +73,6 @@ $( document ).ready(function() {
           $('#posTweetCount').text(msg.tweetsTotalClinton);
           $("#clintontweets").prepend("<li>"+tweet+"</li>");
           var listLength = $('#clintontweets li').length;
-          console.log(listLength);
           if(listLength > 50){
               $('#clintontweets li:last').remove();
           }
