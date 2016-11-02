@@ -1,5 +1,5 @@
 var domain = 'http://'+document.domain+':3002';
-var socket = io(domain);
+var socket = io();
 var negTweetCount = 0;
 var posTweetCount = 0;
 var UserId = 0;

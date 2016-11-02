@@ -9,16 +9,15 @@
           integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
   </head>
   <body>
-    <h1><%= title %></h1>
-
+    <h1>Hit the button and take a look into the future</h1>
     <div class="row">
       <div class="col-md-3">
         <form method="get" action="/search" enctype='multipart/form-data'>
           <div class="input-group">
-            <input type="text" name="q" value="" id="q" placeholder="Search tweets..." class="form-control">
+            <input type="text" disabled name="q" value="" id="q" placeholder="Click the button to see the future --->" class="form-control">
             <br>
             <span class="input-group-btn">
-                    <input type="submit" class="btn btn-primary" value="Search">
+                    <input type="submit" class="btn btn-primary" value="Predict the winner! ">
                 </span>
           </div>
         </form>
