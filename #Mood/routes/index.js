@@ -137,8 +137,8 @@ module.exports = function (io) {
             natural.PorterStemmer.attach();
             var userId = randomstring.generate();
             users.push(userId);
-            res.render('search', {title: "HELLO", userId: userId});
-
+            res.render('search', {title: "Election predictor", userId: userId});
+            console.log('so far so good but stream wont start?');
             stream.on('tweet', function (tweet) {
                 console.log(tweet.text);
                 if (io.engine.clientsCount == 0 && started) {
@@ -249,7 +249,7 @@ module.exports = function (io) {
                         EveryDayClintNeg: EveryDayClintNeg,
                         EveryDayTrumpNeg: EveryDayTumpNeg
                     };
-                    io.emit(userId, emit);
+                    io.emit('tweet', emit);
                 }
 
             });
