@@ -14,82 +14,24 @@ module.exports = function (io) {
     var dynamodb = new AWS.DynamoDB();
     var pm2 = require("pm2");
 
-/*
-    var table = "Prediction";
+    var trumpPos = 0;
+    var trumpTotal  = 0;
+    var clintPos = 0;
+    var clintTotal = 0;
+    var totalTweets = 0;
+    var otherTweets = 0;
+    var otherTweetsTotal = 0;
+    var EveryDayTrump = 0;
+    var EveryDayClint = 0;
+    var EveryDayTotal = 0;
+    var trumpNeg = 0;
+    var clintNeg = 0;
+    var EveryDayTumpNeg = 0;
+    var EveryDayClintNeg = 0;
+    var EveryDayTotalClint = 0;
+    var EveryDayTotalTrump = 0;
+    var accountName = "";
 
-    var Today = '30/10/2016';
-
-    var params = {
-        TableName:table,
-        Key:{
-            "Date":Today
-        },
-        ConditionExpression:"TrumpPosDay > :val",
-        ExpressionAttributeValues: {
-            ":val": 5.0
-        }
-    };
-
-    console.log("Attempting a conditional delete...");
-    docClient.delete(params, function(err, data) {
-        if (err) {
-            console.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2));
-        } else {
-            console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2));
-        }
-    });*/
-/*
-    var params = {
-        TableName: 'Predictions',
-        Key:{
-            "Key": 'jsadfjj2323jkds'
-        }
-    };
-    docClient.get(params, function(err, data) {
-        if (err) {
-            console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
-        } else {
-            console.log("GetItem succeeded:", JSON.stringify(data, null, 2));
-        }
-    });
-
-    var params = {
-        TableName: "Predictions",
-        Item: {
-            "Key": "jsadfjj2323jkds",
-            "Total": 567 ,
-            "ClintPos": 127,
-            "TrumpPos":  57
-        }
-    };
-    docClient.put(params, function(err, data) {
-        if (err) {
-            console.error("Unable to add predictions", ". Error JSON:", JSON.stringify(err, null, 2));
-        } else {
-            console.log("PutItem succeeded:");
-        }
-    });*/
-/*
-    var params = {
-        TableName : "PredictionNumbers",
-        KeySchema: [
-            { AttributeName: "Date", KeyType: "HASH"}],
-        AttributeDefinitions: [
-            { AttributeName: "Date", AttributeType: "S" }
-        ],
-        ProvisionedThroughput: {
-            ReadCapacityUnits: 10,
-            WriteCapacityUnits: 10
-        }
-    };
-
-    dynamodb.createTable(params, function(err, data) {
-        if (err) {
-            console.error("Unable to create table. Error JSON:", JSON.stringify(err, null, 2));
-        } else {
-            console.log("Created table. Table description JSON:", JSON.stringify(data, null, 2));
-        }
-    });*/
 
     var T = new Twit({
         consumer_key: '8uCnElCvIFMhfuAJbglIiMa2F',
@@ -102,26 +44,16 @@ module.exports = function (io) {
     var users = [];
 
     /* GET home page. */
-    router.get('/', function (req, res, next) {
-        res.render('index', {title: '#Mood'});
-    });
+    // router.get('/', function (req, res, next) {
+    //     res.render('index', {title: '#Mood'});
+    // });
 
     natural.BayesClassifier.load('classifier.json', null, function (err, classifier) {
         classifierr = classifier;
     });
 
-      router.get("/search", function (req, res) {
-        // io.sockets.on('connection', function(Socket) {
-        //    allClients.push(Socket);
-        //    console.log("clientsCount on connect " + allClients.length);
-        //    Socket.on('disconnect', function() {
-        //       console.log('Got disconnect!');
-        //       var i = allClients.indexOf(Socket);
-        //       allClients.splice(i, 1);
-        //       console.log("clientsCount on disconnect " + allClients.length);
-        //    });
-        // });
-        //
+      router.get("/", function (req, res) {
+
           if (io.engine.clientsCount >= 0 && started == false) {
               console.log("started first time: " + started);
               var today = new Date();
@@ -140,6 +72,11 @@ module.exports = function (io) {
                   if (err) {
                       console.error("Unable to scan the table. Error JSON:", JSON.stringify(err, null, 2));
                   } else {
+                      EveryDayTotal = 0;
+                      EveryDayTrump = 0;
+                      EveryDayClint = 0;
+                      EveryDayTotalTrump = 0;
+                      EveryDayTotalClint = 0;
                       console.log("Scan succeeded.");
                       data.Items.forEach(function(day) {
                           EveryDayTotal += day.TotalDay;
@@ -166,7 +103,7 @@ module.exports = function (io) {
               docClient.get(dailyParams, function(err, data) {
                   if (err) {
                       console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
-                      console.log("159");
+                      console.log("106");
                   } else {
                       console.log(data);
                       if(isEmpty(data)){
@@ -210,31 +147,14 @@ module.exports = function (io) {
           var userId = randomstring.generate();
           users.push(userId);
 
-          res.render('search', {title: query, userId: userId});
-
-          var trumpPos = 0;
-          var trumpTotal  = 0;
-          var clintPos = 0;
-          var clintTotal = 0;
-          var totalTweets = 0;
-          var otherTweets = 0;
-          var otherTweetsTotal = 0;
-          var EveryDayTrump = 0;
-          var EveryDayClint = 0;
-          var EveryDayTotal = 0;
-          var trumpNeg = 0;
-          var clintNeg = 0;
-          var EveryDayTumpNeg = 0;
-          var EveryDayClintNeg = 0;
-          var EveryDayTotalClint = 0;
-          var EveryDayTotalTrump = 0;
-          var accountName = "";
-
+          res.render('search', {title: "Election Predictor", userId: userId});
+          console.log("Good so far: ");
           stream.on('tweet', function (tweet) {
+              console.log(tweet.text);
               if (io.engine.clientsCount == 0 && started) {
                   console.log('in here on stoped');
                   started = false;
-                  stream.stop();
+                  // stream.stop();
                   var today = new Date();
                   var dd = today.getDate();
                   var mm = today.getMonth()+1;
@@ -273,8 +193,8 @@ module.exports = function (io) {
                   //console.log("Total tweets: " + totalTweets);
                   var tweetxt = tweet.text.toLocaleLowerCase();
                   var tweetid = tweet.id_str;
-                  accountName = tweet.screen_name
-                  stemedList = tweetxt.tokenizeAndStem();
+                  accountName = tweet.screen_name;
+                  var stemedList = tweetxt.tokenizeAndStem();
                   var sentence = "";
 
                   for (var i = 0; i < stemedList.length; i++) {
@@ -357,7 +277,7 @@ module.exports = function (io) {
 
                   };
 
-                  io.emit(userId, emit);
+                  io.emit("tweet", emit);
               }
 
             });
@@ -365,7 +285,7 @@ module.exports = function (io) {
                   console.log(error);
                   if(error == "Error: unexpected end of file"){
                     // Random error, stops the stream, saves all data and restart
-                    stream.stop();
+                    // stream.stop();
                     var today = new Date();
                     var dd = today.getDate();
                     var mm = today.getMonth()+1;
@@ -390,17 +310,17 @@ module.exports = function (io) {
                     docClient.update(params, function(err, data) {
                         if (err) {
                             console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
-                            console.log("255");
+                            console.log("311");
                         } else {
                             console.log(data);
                             console.log("UpdateItem succeeded:", JSON.stringify(data, null, 2));
                             // Restars server here ----
-                            console.log("Server restarting");
-                            pm2.restart('bin/www', function () {});
-                            io.emit("tweet", {refresh: true});
+                            pm2.restart('bin/www', function () {
+                                console.log("Restarted");
+                                var restartEmit = {refresh:true};
+                                io.emit('restart', restartEmit);
 
-
-
+                            });
                         }
                     });
                   }
@@ -416,42 +336,6 @@ function isEmpty(obj){
     }
     return true;
 }
-     // var fs = require('fs'), filename = "./positiveUse.txt";
-     // classifier = new natural.BayesClassifier();
-     //
-     // fs.readFile(filename, 'utf8', function(err, data) {
-     // if (err) throw err;
-     // console.log('OK: ' + filename);
-     //
-     // line = data.split("\n");
-     // list = [];
-     // for(var i=0; i<line.length; i++){
-     // sentiment = line[i][2];
-     // tweetText = line[i].substring(7, line[i].length - 4);
-     // list.push([sentiment, tweetText]);
-     // }
-     //
-     // for(var j =0; j < list.length; j++){
-     // natural.PorterStemmer.attach();
-     // var tokentweet = list[j][1];
-     // tokentweet = tokentweet.tokenizeAndStem();
-     // var finalTweetString = "";
-     // for(var x=0; x<tokentweet.length; x++ ){
-     // finalTweetString += tokentweet[x] + " ";
-     // }
-     // classifier.addDocument(finalTweetString,list[j][0]);
-     // }
-     // classifier.train();
-     // classifier.save('classifier.json', function(err, classifier) {
-     // // the classifier is saved to the classifier.json file!
-     // });
-     // var check = 'I like icecream';
-     // console.log(check);
-     // console.log(classifier.classify(check));
-     // console.log(classifier.getClassifications(check));
-     // });
 
-
-    //module.exports = router;
     return router;
 };
