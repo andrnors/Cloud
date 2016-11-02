@@ -8,7 +8,7 @@ module.exports = function (io) {
     var classifierr = 0;
     var started = false;
     var AWS = require('aws-sdk');
-    AWS.config.update({ region: "ap-southeast-2" });
+    AWS.config.update({ region: "us-west-2", endpoint: "https://dynamodb.us-west-2.amazonaws.com" });
     var docClient = new AWS.DynamoDB.DocumentClient();
     var $ = require("jquery");
     var dynamodb = new AWS.DynamoDB();
@@ -106,7 +106,6 @@ module.exports = function (io) {
         res.render('index', {title: '#Mood'});
     });
 
-    var allClients = [];
     natural.BayesClassifier.load('classifier.json', null, function (err, classifier) {
         classifierr = classifier;
     });
@@ -123,7 +122,7 @@ module.exports = function (io) {
         //    });
         // });
         //
-          if (io.engine.clientsCount && started == false) {
+          if (io.engine.clientsCount >= 0 && started == false) {
               console.log("started first time: " + started);
               var today = new Date();
               var dd = today.getDate();
