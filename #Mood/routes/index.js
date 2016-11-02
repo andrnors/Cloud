@@ -27,19 +27,19 @@ module.exports = function (io) {
         today = dd + '/' + mm + '/' + yyyy;
         today = today.toString();
 
-        // collection.insertOne({
-        //     "Date": today,
-        //     "TotalDay": 0,
-        //     "ClintPosDay": 0,
-        //     "TrumpPosDay": 0,
-        //     "TotalClintDay": 0,
-        //     "TotalTrumpDay": 0
-        // });
+        collection.insertOne({
+            "Date": today,
+            "TotalDay": 0,
+            "ClintPosDay": 0,
+            "TrumpPosDay": 0,
+            "TotalClintDay": 0,
+            "TotalTrumpDay": 0
+        });
 
         collection.find({}).toArray(function (err, docs) {
             assert.equal(err, null);
-            console.log("Found the following records");
-            console.log(docs);
+            // console.log("Found the following records");
+            // console.log(docs);
         });
 
         var T = new Twit({
@@ -63,7 +63,7 @@ module.exports = function (io) {
 
         router.get("/search", function (req, res) {
 
-            if (io.engine.clientsCount && started == false) {
+            if (io.engine.clientsCount > 0 && started == false) {
                 console.log("started first time: " + started);
 
                 // Update total variables
@@ -71,18 +71,22 @@ module.exports = function (io) {
                     assert.equal(err, null);
                     console.log("Found the following records");
                     console.log(docs);
-                    EveryDayTotal += docs.TotalDay;
-                    EveryDayTrump += docs.TrumpPosDay;
-                    EveryDayClint += docs.ClintPosDay;
-                    EveryDayTotalTrump += docs.TotalTrumpDay;
-                    EveryDayTotalClint += docs.TotalClintDay;
+                    docs.forEach(function (day, index) {
+                        console.log("Updateed " + day);
+                        EveryDayTotal += day.TotalDay;
+                        EveryDayTrump += day.TrumpPosDay;
+                        EveryDayClint += day.ClintPosDay;
+                        EveryDayTotalTrump += day.TotalTrumpDay;
+                        EveryDayTotalClint += day.TotalClintDay;
+                    });
                 });
             }
 
             // Find today's data
             collection.find({"Date": today}).toArray(function (err, docs) {
                 assert.equal(err, null);
-                if (isEmpty(docs)) {
+                console.log("Docs today " + docs);
+                if (docs == null || docs == "undefined" || docs) {
                     collection.insertOne({
                         "Date": today,
                         "TotalDay": totalTweets,
@@ -95,11 +99,12 @@ module.exports = function (io) {
                     started = true;
                 }
                 else {
-                    totalTweets = docs.TotalDay;
-                    clintPos = docs.ClintPosDay;
-                    trumpPos = docs.TrumpPosDay;
-                    trumpTotal = docs.TotalTrumpDay;
-                    clintTotal = docs.TotalClintDay;
+                    console.log(docs + " her er feil");
+                    totalTweets = docs[0].TotalDay;
+                    clintPos = docs[0].ClintPosDay;
+                    trumpPos = docs[0].TrumpPosDay;
+                    trumpTotal = docs[0].TotalTrumpDay;
+                    clintTotal = docs[0].TotalClintDay;
                     stream.start();
                     started = true;
                 }
@@ -136,43 +141,44 @@ module.exports = function (io) {
                     started = false;
                     stream.stop();
 
-                    collection.findAndModify(
-                        {Date: today}, // query
-                        [['_id', 'asc']],  // sort order
-                        {
-                            $set: {
-                                "TotalDay": totalTweets,
-                                "ClintPosDay": clintPos,
-                                "TrumpPosDay": trumpPos,
-                                "TotalClintDay": clintTotal,
-                                "TotalTrumpDay": trumpTotal
-                            }
-                        }, // replacement, replaces only the fields "
-                        {}, // options
-                        function (err, object) {
-                            if (err) {
-                                console.warn(err.message);  // returns error if no matching object found
-                            } else {
-                                console.log(object);
-                                console.log("updated")
-                            }
-                        });
-
-
-                    // collection.find({"Date": today}).toArray(function (err, docs) {
-                    //     assert.equal(err, null);
-                    //     console.log("Found the following records");
-                    //     console.log(docs[0]._id);
-                    //
-                    //     collection.updateOne({"id": docs[0]._id}, {
-                    //         "TotalDay": totalTweets,
-                    //         "ClintPosDay": clintPos,
-                    //         "TrumpPosDay": trumpPos,
-                    //         "TotalClintDay": clintTotal,
-                    //         "TotalTrumpDay": trumpTotal
+                    // collection.findAndModify(
+                    //     {Date: today}, // query
+                    //     [['_id', 'asc']],  // sort order
+                    //     {
+                    //         $set: {
+                    //             "TotalDay": totalTweets,
+                    //             "ClintPosDay": clintPos,
+                    //             "TrumpPosDay": trumpPos,
+                    //             "TotalClintDay": clintTotal,
+                    //             "TotalTrumpDay": trumpTotal
+                    //         }
+                    //     }, // replacement, replaces only the fields "
+                    //     {}, // options
+                    //     function (err, object) {
+                    //         if (err) {
+                    //             console.warn(err.message);  // returns error if no matching object found
+                    //         } else {
+                    //             console.log(object);
+                    //             console.log("updated")
+                    //         }
                     //     });
-                    //     console.log("updated");
-                    // });
+
+
+                    collection.find({"Date": today}).toArray(function (err, docs) {
+                        assert.equal(err, null);
+                        console.log("Found the following records");
+                        console.log(docs);
+                        collection.update({"Date": today}, {
+                            "Date": today,
+                            "TotalDay": totalTweets,
+                            "ClintPosDay": clintPos,
+                            "TrumpPosDay": trumpPos,
+                            "TotalClintDay": clintTotal,
+                            "TotalTrumpDay": trumpTotal
+                        },
+                            {upsert: true});
+
+                    });
 
                 } else {
                     totalTweets += 1;
