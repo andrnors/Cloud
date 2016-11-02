@@ -275,6 +275,8 @@ module.exports = function (io) {
                     });
                     pm2.restart('bin/www', function () {
                         console.log("Restarted");
+                        var restartEmit = {refresh:true};
+                        io.emit('restart', restartEmit);
                     });
                 }
             });

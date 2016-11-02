@@ -79,11 +79,12 @@ $( document ).ready(function() {
               $('#clintontweets li:last').remove();
           }
         }
-        socket.on("tweet", function (msg) {
-            if(msg.refresh){
-                location.reload();
-            }
-        });
+    });
+
+    socket.on("restart", function (msg) {
+        if(msg.refresh){
+            location.reload();
+        }
     });
 
     google.charts.load('current', {'packages':['corechart']});
