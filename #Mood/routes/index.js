@@ -140,6 +140,7 @@ module.exports = function (io) {
             res.render('search', {title: "HELLO", userId: userId});
 
             stream.on('tweet', function (tweet) {
+                console.log(tweet.text);
                 if (io.engine.clientsCount == 0 && started) {
                     console.log('in here on stoped');
                     started = false;
