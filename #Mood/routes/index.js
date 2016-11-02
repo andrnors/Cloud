@@ -150,7 +150,7 @@ module.exports = function (io) {
           res.render('search', {title: "Election Predictor", userId: userId});
           console.log("Good so far: ");
           stream.on('tweet', function (tweet) {
-              console.log(tweet.text);
+              // console.log(tweet.text);
               if (io.engine.clientsCount == 0 && started) {
                   console.log('in here on stoped');
                   started = false;
