@@ -1,4 +1,5 @@
-var socket = io('http://localhost:3002');
+var domain = 'http://'+document.domain+':3002';
+var socket = io(domain);
 
 var negTweetCount = 0;
 var posTweetCount = 0;
