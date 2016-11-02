@@ -10,6 +10,24 @@ module.exports = function (io) {
     var $ = require("jquery");
     var pm2 = require("pm2");
 
+    var trumpPos = 0;
+    var trumpTotal = 0;
+    var clintPos = 0;
+    var clintTotal = 0;
+    var totalTweets = 0;
+    var otherTweets = 0;
+    var otherTweetsTotal = 0;
+    var EveryDayTrump = 0;
+    var EveryDayClint = 0;
+    var EveryDayTotal = 0;
+    var trumpNeg = 0;
+    var clintNeg = 0;
+    var EveryDayTumpNeg = 0;
+    var EveryDayClintNeg = 0;
+    var EveryDayTotalClint = 0;
+    var EveryDayTotalTrump = 0;
+    var accountName = "";
+
     var MongoClient = require('mongodb').MongoClient
         , assert = require('assert');
     var url = 'mongodb://localhost:27017/Mood';
@@ -26,15 +44,6 @@ module.exports = function (io) {
         var yyyy = today.getFullYear();
         today = dd + '/' + mm + '/' + yyyy;
         today = today.toString();
-
-        collection.insertOne({
-            "Date": today,
-            "TotalDay": 0,
-            "ClintPosDay": 0,
-            "TrumpPosDay": 0,
-            "TotalClintDay": 0,
-            "TotalTrumpDay": 0
-        });
 
         collection.find({}).toArray(function (err, docs) {
             assert.equal(err, null);
@@ -53,116 +62,88 @@ module.exports = function (io) {
         var users = [];
 
         /* GET home page. */
-        router.get('/', function (req, res, next) {
-            res.render('index', {title: '#Mood'});
-        });
+        // router.get('/', function (req, res, next) {
+        //     res.render('index', {title: '#Mood'});
+        // });
 
         natural.BayesClassifier.load('classifier.json', null, function (err, classifier) {
             classifierr = classifier;
         });
 
-        router.get("/search", function (req, res) {
+        router.get("/", function (req, res) {
 
-            if (io.engine.clientsCount > 0 && started == false) {
+            if (io.engine.clientsCount >= 0 && started == false) {
                 console.log("started first time: " + started);
 
                 // Update total variables
                 collection.find({}).toArray(function (err, docs) {
+                    if(err){
+                        console.log(err);
+                    }
                     assert.equal(err, null);
+
                     console.log("Found the following records");
                     console.log(docs);
+
+                    EveryDayTotal = 0;
+                    EveryDayTrump = 0;
+                    EveryDayClint = 0;
+                    EveryDayTotalTrump = 0;
+                    EveryDayTotalClint = 0;
                     docs.forEach(function (day, index) {
-                        console.log("Updateed " + day);
+                        console.log("Updateed " + day.TotalDay);
+                        console.log("EveryDayTotal " + EveryDayTotal);
+
                         EveryDayTotal += day.TotalDay;
                         EveryDayTrump += day.TrumpPosDay;
                         EveryDayClint += day.ClintPosDay;
                         EveryDayTotalTrump += day.TotalTrumpDay;
                         EveryDayTotalClint += day.TotalClintDay;
                     });
+                    console.log("EveryDayTotal " + EveryDayTotal);
+
+
                 });
+
+                // Find today's data
+                collection.find({"Date": today}).toArray(function (err, docs) {
+                    assert.equal(err, null);
+                    console.log("Docs today " + docs);
+                    if (docs == null || isEmpty(docs)) {
+                        collection.insertOne({
+                            "Date": today,
+                            "TotalDay": totalTweets,
+                            "ClintPosDay": clintPos,
+                            "TrumpPosDay": trumpPos,
+                            "TotalClintDay": clintTotal,
+                            "TotalTrumpDay": trumpTotal
+                        });
+                        stream.start();
+                        started = true;
+                    }
+                    else {
+                        totalTweets = docs[0].TotalDay;
+                        clintPos = docs[0].ClintPosDay;
+                        trumpPos = docs[0].TrumpPosDay;
+                        trumpTotal = docs[0].TotalTrumpDay;
+                        clintTotal = docs[0].TotalClintDay;
+                        stream.start();
+                        started = true;
+                    }
+                });
+
             }
-
-            // Find today's data
-            collection.find({"Date": today}).toArray(function (err, docs) {
-                assert.equal(err, null);
-                console.log("Docs today " + docs);
-                if (docs == null || docs == "undefined" || docs) {
-                    collection.insertOne({
-                        "Date": today,
-                        "TotalDay": totalTweets,
-                        "ClintPosDay": clintPos,
-                        "TrumpPosDay": trumpPos,
-                        "TotalClintDay": clintTotal,
-                        "TotalTrumpDay": trumpTotal
-                    });
-                    stream.start();
-                    started = true;
-                }
-                else {
-                    console.log(docs + " her er feil");
-                    totalTweets = docs[0].TotalDay;
-                    clintPos = docs[0].ClintPosDay;
-                    trumpPos = docs[0].TrumpPosDay;
-                    trumpTotal = docs[0].TotalTrumpDay;
-                    clintTotal = docs[0].TotalClintDay;
-                    stream.start();
-                    started = true;
-                }
-
-            });
-
 
             natural.PorterStemmer.attach();
             var userId = randomstring.generate();
             users.push(userId);
             res.render('search', {title: "HELLO", userId: userId});
 
-            var trumpPos = 0;
-            var trumpTotal = 0;
-            var clintPos = 0;
-            var clintTotal = 0;
-            var totalTweets = 0;
-            var otherTweets = 0;
-            var otherTweetsTotal = 0;
-            var EveryDayTrump = 0;
-            var EveryDayClint = 0;
-            var EveryDayTotal = 0;
-            var trumpNeg = 0;
-            var clintNeg = 0;
-            var EveryDayTumpNeg = 0;
-            var EveryDayClintNeg = 0;
-            var EveryDayTotalClint = 0;
-            var EveryDayTotalTrump = 0;
-            var accountName = "";
-
             stream.on('tweet', function (tweet) {
                 if (io.engine.clientsCount == 0 && started) {
                     console.log('in here on stoped');
                     started = false;
-                    stream.stop();
-
-                    // collection.findAndModify(
-                    //     {Date: today}, // query
-                    //     [['_id', 'asc']],  // sort order
-                    //     {
-                    //         $set: {
-                    //             "TotalDay": totalTweets,
-                    //             "ClintPosDay": clintPos,
-                    //             "TrumpPosDay": trumpPos,
-                    //             "TotalClintDay": clintTotal,
-                    //             "TotalTrumpDay": trumpTotal
-                    //         }
-                    //     }, // replacement, replaces only the fields "
-                    //     {}, // options
-                    //     function (err, object) {
-                    //         if (err) {
-                    //             console.warn(err.message);  // returns error if no matching object found
-                    //         } else {
-                    //             console.log(object);
-                    //             console.log("updated")
-                    //         }
-                    //     });
-
+                    // stream.stop();
 
                     collection.find({"Date": today}).toArray(function (err, docs) {
                         assert.equal(err, null);
@@ -183,11 +164,10 @@ module.exports = function (io) {
                 } else {
                     totalTweets += 1;
                     EveryDayTotal += 1;
-                    //console.log("Total tweets: " + totalTweets);
                     var tweetxt = tweet.text.toLocaleLowerCase();
                     var tweetid = tweet.id_str;
                     accountName = tweet.screen_name;
-                    stemedList = tweetxt.tokenizeAndStem();
+                    var stemedList = tweetxt.tokenizeAndStem();
                     var sentence = "";
 
                     for (var i = 0; i < stemedList.length; i++) {
@@ -276,20 +256,24 @@ module.exports = function (io) {
                 console.log(error);
                 if (error == "Error: unexpected end of file") {
                     // Random error, stops the stream, saves all data and restart
-                    stream.stop();
+                    // stream.stop();
                     collection.find({"Date": today}).toArray(function (err, docs) {
                         assert.equal(err, null);
                         console.log("Found the following records");
                         console.log(docs);
-                        collection.updateOne(docs, {
-                            "TotalDay": totalTweets,
-                            "ClintPosDay": clintPos,
-                            "TrumpPosDay": trumpPos,
-                            "TotalClintDay": clintTotal,
-                            "TotalTrumpDay": trumpTotal
-                        });
+                        collection.update({"Date": today}, {
+                                "Date": today,
+                                "TotalDay": totalTweets,
+                                "ClintPosDay": clintPos,
+                                "TrumpPosDay": trumpPos,
+                                "TotalClintDay": clintTotal,
+                                "TotalTrumpDay": trumpTotal
+                            },
+                            {upsert: true});
+
                     });
                     pm2.restart('bin/www', function () {
+                        console.log("Restarted");
                     });
                 }
             });
