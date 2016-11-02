@@ -30,7 +30,7 @@ module.exports = function (io) {
 
     var MongoClient = require('mongodb').MongoClient
         , assert = require('assert');
-    var url = 'mongodb://localhost:27017/Mood';
+    var url = 'mongodb://parseuser:password@IP_SERVER:48899/parse';
 
     MongoClient.connect(url, function (err, db) {
         assert.equal(null, err);
