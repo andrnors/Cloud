@@ -35,7 +35,7 @@ $( document ).ready(function() {
         $( "#slider" ).slider({
             range: "min",
             value: 50,
-            min: 1,
+            min: 0,
             max: 100,
             create: function() {
                 handle.text( $( this ).slider( "value" ) );
