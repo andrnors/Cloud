@@ -4,12 +4,14 @@ var path = require('path');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var AWS = require('aws-sdk');
 
 var app = express();
 app.io = require("socket.io")();
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var search = require('./routes/search');
+AWS.config.loadFromPath(__dirname + '/config.json');
 
 
 

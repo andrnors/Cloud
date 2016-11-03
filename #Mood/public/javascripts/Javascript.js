@@ -12,6 +12,7 @@ var chart2 = "";
 var options2 = "";
 var data2 = "";
 var loaded = false;
+var loaderVal = 50;
 
 $('#posCheck').click(function(){
     if (this.checked) {
@@ -29,6 +30,42 @@ $('#negCheck').click(function(){
 });
 
 $( document ).ready(function() {
+    $( function() {
+        var handle = $( "#custom-handle" );
+        $( "#slider" ).slider({
+            range: "min",
+            value: 50,
+            min: 1,
+            max: 100,
+            create: function() {
+                handle.text( $( this ).slider( "value" ) );
+            },
+            slide: function( event, ui ) {
+                handle.text( ui.value );
+                loaderVal = ui.value;
+            },
+            change: function (event, ui) {
+
+            }
+        });
+    } );
+    $('.ui-slider-handle').on("sliderchange",function (event, ui) {
+        var parameters = { LoadValue: loaderVal };
+        $.post( '/LoadChange',parameters, function(data) {
+        });
+    });
+    $('#slider').slider({
+        formatter: function(value) {
+            loaderVal = value;
+            return value;
+        },
+        change: function () {
+            console.log('here');
+
+        }
+    });
+
+
     UserId = $('#hiddenfield').val();
     socket.on("tweet", function (msg) {
        var tweet = '<amp-twitter width=600 height=850 layout="responsive" data-tweetid='+msg.tweetId+' data-cards="summary_large_image"> <blockquote id ="blockq" placeholder class="twitter-tweet" data-lang="en"> <p lang="en" dir="ltr" id="p"> <a id="l" class="list-group-item" href="https://twitter.com/'+msg.accountName+'/status/'+msg.tweetId+'">'+msg.tweet+'</a></p> </blockquote> </amp-twitter>';
@@ -59,7 +96,7 @@ $( document ).ready(function() {
         };
         chart2.draw(data2, options2);
         }
-        if(msg.trumpId == msg.tweetId  && !msg.retweeted) {
+        if(msg.trumpId == msg.tweetId ) {
 
             $('#negTweetCount').text(msg.tweetsTotalTrump);
             $("#trumptweets").prepend("<li>"+tweet+"</li>");
@@ -69,7 +106,7 @@ $( document ).ready(function() {
                 $('#trumptweets li:last').remove();
             }
             
-        }else if (msg.clintonId == msg.tweetId && !msg.retweeted) {
+        }else if (msg.clintonId == msg.tweetId) {
           $('#posTweetCount').text(msg.tweetsTotalClinton);
           $("#clintontweets").prepend("<li>"+tweet+"</li>");
           var listLength = $('#clintontweets li').length;

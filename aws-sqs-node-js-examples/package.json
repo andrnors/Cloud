@@ -1,0 +1,11 @@
+{
+  "name": "aws-sqs-tutorial",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "aws-sdk": "~2.1.36",
+    "express": "~4.12.4",
+    "pm2": "^2.0.19",
+    "twit": "^2.2.5"
+  }
+}
