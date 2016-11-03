@@ -121,7 +121,7 @@ module.exports = function (io) {
                           docClient.put(params, function(err, data) {
                               if (err) {
                                   console.error("Unable to add predictions", ". Error JSON:", JSON.stringify(err, null, 2));
-                                  console.log("118");
+                                  console.log("124");
                               } else {
                                   console.log("PutItem succeeded");
                                   stream.start();
@@ -150,7 +150,11 @@ module.exports = function (io) {
           res.render('search', {title: "Election Predictor", userId: userId});
           console.log("Good so far: ");
           stream.on('tweet', function (tweet) {
-              // console.log(tweet.text);
+              ///Just to verify that the stream is going
+              setInterval(function () {
+                  console.log(tweet.text);
+              }, 4000);
+
               if (io.engine.clientsCount == 0 && started) {
                   console.log('in here on stoped');
                   started = false;
@@ -285,7 +289,7 @@ module.exports = function (io) {
                   console.log(error);
                   if(error == "Error: unexpected end of file"){
                     // Random error, stops the stream, saves all data and restart
-                    // stream.stop();
+                    stream.stop();
                     var today = new Date();
                     var dd = today.getDate();
                     var mm = today.getMonth()+1;
