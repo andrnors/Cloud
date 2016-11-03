@@ -45,25 +45,12 @@ $( document ).ready(function() {
                 loaderVal = ui.value;
             },
             change: function (event, ui) {
-
+                var parameters = { LoadValue: ui.value };
+                $.post( '/LoadChange',parameters, function(data) {
+                });
             }
         });
     } );
-    $('.ui-slider-handle').on("sliderchange",function (event, ui) {
-        var parameters = { LoadValue: loaderVal };
-        $.post( '/LoadChange',parameters, function(data) {
-        });
-    });
-    $('#slider').slider({
-        formatter: function(value) {
-            loaderVal = value;
-            return value;
-        },
-        change: function () {
-            console.log('here');
-
-        }
-    });
 
 
     UserId = $('#hiddenfield').val();

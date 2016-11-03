@@ -306,7 +306,7 @@ router.post('/LoadChange', function(req, res){
     }
     clearInterval(interval);
     interval = setInterval(func,Load);
-    console.log(Load);
+    //console.log(Load);
     res.send('ok');
 
 });
