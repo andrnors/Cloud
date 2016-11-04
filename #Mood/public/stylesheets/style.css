@@ -76,3 +76,6 @@ li{
   text-align: center;
   line-height: 1.6em;
 }
+.pieSize{
+  width: 600px; height: 400px;
+}
